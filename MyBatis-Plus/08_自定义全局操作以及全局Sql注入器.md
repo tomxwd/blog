@@ -1,12 +1,11 @@
 ---
 title: 08_自定义全局操作以及全局Sql注入器
-data: 2019-06-15 ‏‎‏‎‏‎19:39:11
+date: 2019-06-15 ‏‎‏‎‏‎19:39:11
 tags: 
  - Java
  - Mybatis
  - Mybatis-Plus
 categories:
- - Mybatis
  - Mybatis-Plus
 ---
 

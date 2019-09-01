@@ -1,6 +1,6 @@
 ---
 title: MAVEN实战
-data: 2019-06-07 ‏‎‏‎18:00:28
+date: 2019-06-07 ‏‎‏‎18:00:28
 tags: 
  - Java
  - Maven

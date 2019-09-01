@@ -1,12 +1,11 @@
 ---
 title: 01_MyBatis-Plus_简介
-data: 2019-06-08 13:58:44
+date: 2019-06-08 13:58:44
 tags: 
  - Java
  - Mybatis
  - Mybatis-Plus
 categories:
- - Mybatis
  - Mybatis-Plus
 ---
 

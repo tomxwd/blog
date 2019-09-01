@@ -1,6 +1,6 @@
 ---
 title: MAVEN的好处
-data: 2019-06-07 ‏‎‏‎22:27:02
+date: 2019-06-07 ‏‎‏‎22:27:02
 tags: 
  - Java
  - Maven

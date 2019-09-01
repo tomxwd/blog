@@ -1,6 +1,6 @@
 ---
 title: Maven基础
-data: 2019-06-04 ‏‎22:06:57
+date: 2019-06-04 ‏‎22:06:57
 tags: 
  - Java
  - Maven

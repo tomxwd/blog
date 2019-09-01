@@ -1,6 +1,6 @@
 ---
 title: 13_Spring集成RabbitMQ-Client
-data: 2019-07-01 19:26:40
+date: 2019-07-01 19:26:40
 tags: 
  - Java
  - RabbitMQ

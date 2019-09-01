@@ -1,6 +1,6 @@
 ---
 title: 07_Docker_CentOS安装Docker
-data: 2019-07-07 16:04:56
+date: 2019-07-07 16:04:56
 tags: 
  - Docker
 categories:

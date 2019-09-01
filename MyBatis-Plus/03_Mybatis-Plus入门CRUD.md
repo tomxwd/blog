@@ -1,12 +1,11 @@
 ---
 title: 03_Mybatis-Plus入门CRUD
-data: 2019-06-08 ‏‎‏‎17:05:13
+date: 2019-06-08 ‏‎‏‎17:05:13
 tags: 
  - Java
  - Mybatis
  - Mybatis-Plus
 categories:
- - Mybatis
  - Mybatis-Plus
 ---
 
@@ -26,7 +25,7 @@ categories:
     - 只需要创建EmployeeMapper接口，并继承BaseMapper接口，这就是使用MP需要完成的所有操作，甚至不用创建SQL映射文件。
 3. 具体实现
 <br>首先要编写Mapper接口：
-```
+```java
 package top.tomxwd.mp.mapper;
 import com.baomidou.mybatisplus.mapper.BaseMapper;
 import top.tomxwd.mp.beans.Employee;
@@ -43,7 +42,7 @@ public interface EmployeeMapper extends BaseMapper<Employee> {
 }
 ```
 **第二步要在实体类上的主键打@TabledId注解**<br>
-```
+```java
 /**
  * @TableId：
  * 	value：指定表中的主键列的列名，如果实体属性名和列名一致，可以省略
@@ -53,7 +52,8 @@ public interface EmployeeMapper extends BaseMapper<Employee> {
 private Integer id;
 ```
 **第三步要在实体类上打@TableName注解**
-```
+
+```java
 /*
  * Mybatis-Plus会默认使用实体类的类名到数据库中找对应的表
  */
@@ -62,7 +62,7 @@ public class Employee {}
 ```
 以上就是MP的CRUD操作所需要做的事情。
 4. 测试：
-```
+```java
 private ApplicationContext ioc = new ClassPathXmlApplicationContext("applicationContext.xml");
 private EmployeeMapper employeeMapper = ioc.getBean("employeeMapper",EmployeeMapper.class);
 /**
@@ -99,7 +99,7 @@ result:1
 |idType.INPUT|用户输入ID|
 |idType.ID_WORKER|全局唯一ID，内容为空自动填充**（默认配置）**|
 |idType.UUID|全局唯一id，内容为空自动填充|
-```
+```java
 /**
  * @TableId：
  * 	value：指定表中的主键列的列名，如果实体属性名和列名一致，可以省略

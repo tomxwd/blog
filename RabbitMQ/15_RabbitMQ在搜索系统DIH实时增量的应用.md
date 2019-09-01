@@ -1,6 +1,6 @@
 ---
 title: 15_RabbitMQ在搜索系统DIH实时增量的应用
-data: 2019-07-01 22:13:42
+date: 2019-07-01 22:13:42
 tags: 
  - Java
  - RabbitMQ

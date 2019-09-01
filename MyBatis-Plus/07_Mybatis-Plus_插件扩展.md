@@ -1,12 +1,11 @@
 ---
 title: 07_Mybatis-Plus_插件扩展
-data: 2019-06-15 ‏‎‏‎15:09:29
+date: 2019-06-15 ‏‎‏‎15:09:29
 tags: 
  - Java
  - Mybatis
  - Mybatis-Plus
 categories:
- - Mybatis
  - Mybatis-Plus
 ---
 

@@ -1,0 +1,124 @@
+---
+title: 01_Selenium_初次体验
+date: 2019-08-31 08:27:50
+tags: 
+ - Java
+ - Selenaium
+ - 爬虫
+categories:
+ - Selenaium
+---
+
+# 01_Selenium_初次体验
+
+> [来自b站码匠笔记视频](https://space.bilibili.com/406041527)
+
+## 场景
+
+通过Selenium实现模拟人为操作自动化，根据工作经验、学历要求、公司规模、行业领域抓取拉钩薪资范围；
+
+## 环境准备
+
+- Chrome WebDriver
+  - [官方下载地址](http://chromedriver.storage.googleapis.com/index.html)
+  - [淘宝提供的下载地址](http://npm.taobao.org/mirrors/chromedriver)
+
+- Selenium
+
+  ```xml
+  <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-server</artifactId>
+      <version>3.141.59</version>
+  </dependency>
+  ```
+
+- 这里注意要对应好浏览器和WebDriver的版本，看下载的地方，有个notes.txt，上面会有写；
+
+### 搭建项目
+
+1. 创建maven工程
+2. 引入依赖
+3. 把WebDriver放在resources目录下
+4. 编写类进行测试
+
+```java
+public class LagouSpider {
+
+    public static void main(String[] args) {
+        // 设置webDriver路径
+        System.setProperty("webdriver.chrome.driver",LagouSpider.class.getClassLoader().getResource("chromedriver.exe").getPath());
+
+        // 创建webdriver
+        WebDriver driver = new ChromeDriver();
+        driver.get("https://www.lagou.com/zhaopin/Java/?labelWords=label");
+
+        // 跳转页面
+        clickOption(driver, "工作经验", "应届毕业生");
+        clickOption(driver, "学历要求", "本科");
+        clickOption(driver, "融资阶段", "不限");
+        clickOption(driver, "公司规模", "不限");
+        clickOption(driver, "行业领域", "不限");
+        // 解析页面元素
+        extractJobsByPagination(driver);
+
+    }
+
+    private static void extractJobsByPagination(WebDriver driver) {
+        List<WebElement> jobElements = driver.findElements(By.className("con_list_item"));
+        try {
+            for (WebElement jobElement : jobElements) {
+                WebElement companyElement = jobElement.findElement(By.className("company_name"));
+                WebElement moneyElement = jobElement.findElement(By.className("position")).findElement(By.className("money"));
+                System.out.println(companyElement.getText()+" : "+moneyElement.getText());
+            }
+        } catch (Exception e) {
+            extractJobsByPagination(driver);
+        }
+        // 下一页
+        WebElement nextPageBtn = driver.findElement(By.className("pager_next"));
+        if(!nextPageBtn.getAttribute("class").contains("pager_next_disabled")){
+            nextPageBtn.click();
+            extractJobsByPagination(driver);
+        }
+    }
+
+    private static void clickOption(WebDriver driver, String chosenTitle, String optionTitle) {
+        WebElement chosenElement = driver.findElement(By.xpath("//li[@class='multi-chosen']//span[contains(text(),'" + chosenTitle + "')]"));
+        // 通过xpath选中元素
+        WebElement optionElement = chosenElement.findElement(By.xpath("../a[contains(text(),'" + optionTitle + "')]"));
+        optionElement.click();
+    }
+
+}
+```
+
+输出：
+
+```
+北京世纪天橙科技有限公司 : 100k-130k
+新东方在线 : 11k-22k
+东方海外信息技术开发中心 : 9k-12k
+乐融集团 : 12k-20k
+有赞 : 10k-13k
+亿车科技 : 8k-15k
+微创软件 : 8k-10k
+百助 : 18k-36k
+闪银奇异 : 12k-20k
+广东亿迅 : 8k-10k
+熙菱信息 : 15k-20k
+寺库 : 20k-40k
+远光软件股份有限公司珠海 : 6k-12k
+金山云 : 10k-20k
+品茗股份 : 4k-8k
+北京世纪天橙科技有限公司 : 100k-130k
+新东方在线 : 11k-22k
+东方海外信息技术开发中心 : 9k-12k
+途虎养车网 : 20k-30k
+......
+```
+
+
+
+
+

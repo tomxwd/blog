@@ -1,12 +1,11 @@
 ---
-title: # 11_Idea快速开发插件
-data: 2019-06-16 ‏‎‏‎10:55:31
+title: 11_Idea快速开发插件
+date: 2019-06-16 ‏‎‏‎10:55:31
 tags: 
  - Java
  - Mybatis
  - Mybatis-Plus
 categories:
- - Mybatis
  - Mybatis-Plus
 ---
 

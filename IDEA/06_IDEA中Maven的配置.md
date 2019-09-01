@@ -1,6 +1,6 @@
 ---
 title: 06_IDEA中Maven的配置
-data: 2019-06-16 ‏‎18:02:32
+date: 2019-06-16 ‏‎18:02:32
 tags: 
  - IDEA
  - Java

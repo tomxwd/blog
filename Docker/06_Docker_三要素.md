@@ -1,6 +1,6 @@
 ---
 title: 06_Docker_三要素
-data: 2019-07-07 ‏‎11:21:48
+date: 2019-07-07 ‏‎11:21:48
 tags: 
  - Docker
 categories:

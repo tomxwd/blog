@@ -1,6 +1,6 @@
 ---
 title: 07_IDEA中生成javadoc、清理缓存和索引、插件的使用
-data: 2019-06-16 18:19:53
+date: 2019-06-16 18:19:53
 tags: 
  - IDEA
  - Java

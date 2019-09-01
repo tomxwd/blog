@@ -1,6 +1,6 @@
 ---
 title: 08_Exchange(交换机/转发器)
-data: 2019-06-22 ‏‎‏‎‏‎21:55:24
+date: 2019-06-22 ‏‎‏‎‏‎21:55:24
 tags: 
  - Java
  - RabbitMQ

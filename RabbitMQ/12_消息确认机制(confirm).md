@@ -1,6 +1,6 @@
 ---
 title: 12_消息确认机制(confirm)
-data: 2019-07-01 ‏‎‏‎‏‎17:44:07
+date: 2019-07-01 ‏‎‏‎‏‎17:44:07
 tags: 
  - Java
  - RabbitMQ

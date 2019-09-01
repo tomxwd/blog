@@ -1,6 +1,6 @@
 ---
 title: 14_RabbitMQ在大数据日志收集中的应用
-data: 2019-07-01 21:25:10
+date: 2019-07-01 21:25:10
 tags: 
  - Java
  - RabbitMQ
