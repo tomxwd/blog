@@ -86,7 +86,18 @@ public class UserAddress implements Serializable {
     public void setIsDefault(String isDefault) {
         this.isDefault = isDefault;
     }
-
+    
+    @Override
+    public String toString() {
+        return "UserAddress{" +
+                "id=" + id +
+                ", userAddress='" + userAddress + '\'' +
+                ", userId='" + userId + '\'' +
+                ", consignee='" + consignee + '\'' +
+                ", phoneNum='" + phoneNum + '\'' +
+                ", isDefault='" + isDefault + '\'' +
+                '}';
+    }
 }
 ```
 
