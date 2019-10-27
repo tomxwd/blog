@@ -44,6 +44,19 @@ categories:
 </dependencies>
 ```
 
+如果mapper.xml放在src/java目录下，编译不到target包的话加这段：
+
+```xml
+<resources>
+    <resource>
+        <directory>src/main/java</directory>
+        <includes>
+            <include>**/*.xml</include>
+        </includes>
+    </resource>
+</resources>
+```
+
 ## 创建数据库表
 
 ```sql

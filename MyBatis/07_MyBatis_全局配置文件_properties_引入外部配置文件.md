@@ -12,6 +12,17 @@ categories:
 
 > [官方文档](http://www.mybatis.org/mybatis-3/zh/configuration.html#)
 
+dbconfig.properties:
+
+```properties
+jdbc.driver=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://tomxwd.top:12389/mybatis
+jdbc.username=root
+jdbc.password=root
+```
+
+mybatis-config.xml
+
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE configuration

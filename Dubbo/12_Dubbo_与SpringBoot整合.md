@@ -27,24 +27,26 @@ categories:
 
 2. 导入dubbo其他依赖，如操作zookeeper的依赖等
 
+   这里发现dubbo的starter是有依赖冲突的，所以排除掉，自己引入一个zookeeper，不排除其实并不影响使用。
+
    ```xml
    <!-- Dubbo Spring Boot Starter -->
    <dependency>
-       <groupId>org.apache.dubbo</groupId>
+       <groupId>com.alibaba.boot</groupId>
        <artifactId>dubbo-spring-boot-starter</artifactId>
-       <version>2.7.3</version>
+       <version>0.2.0</version>
+       <exclusions>
+           <exclusion>
+               <artifactId>zookeeper</artifactId>
+               <groupId>org.apache.zookeeper</groupId>
+           </exclusion>
+       </exclusions>
    </dependency>
-   <!-- curator-framework -->
+   
    <dependency>
-       <groupId>org.apache.curator</groupId>
-       <artifactId>curator-framework</artifactId>
-       <version>4.2.0</version>
-   </dependency>
-   <!-- curator-recipes -->
-   <dependency>
-       <groupId>org.apache.curator</groupId>
-       <artifactId>curator-recipes</artifactId>
-       <version>4.2.0</version>
+       <groupId>org.apache.zookeeper</groupId>
+       <artifactId>zookeeper</artifactId>
+       <version>3.4.9</version>
    </dependency>
    ```
 
@@ -64,7 +66,7 @@ categories:
    dubbo.monitor.protocol=registry
    ```
 
-4. 除了在application.properties中对dubbo进行相关配置之外，我们甚至暴露服务也可以用注解的形式来解决。用dubbo的@Service标签即可【点进去看，会发现这个Service标签也是实现了@Component的功能的，因此是会注入到Spring中的，不用再写Spring的组件注解注入了，多此一举】。
+4. 除了在application.properties中对dubbo进行相关配置之外，我们甚至暴露服务也可以用注解的形式来解决。用dubbo的@Service标签即可；
 
 5. 还要在启动类上开启@EnableDubbo，否则dubbo相关注解不会生效
 
@@ -74,19 +76,109 @@ categories:
 
 创建一个普通的SpringBoot项目：
 
+
+
 pom.xml：
 
 添加接口依赖：
 
 ```xml
-<dependency>
-    <groupId>top.tomxwd</groupId>
-    <artifactId>gmall-interface</artifactId>
-    <version>1.0-SNAPSHOT</version>
-</dependency>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>top.tomxwd</groupId>
+        <artifactId>gmall-interface</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </dependency>
+
+    <!-- Dubbo Spring Boot Starter -->
+    <dependency>
+        <groupId>com.alibaba.boot</groupId>
+        <artifactId>dubbo-spring-boot-starter</artifactId>
+        <version>0.2.0</version>
+        <exclusions>
+            <exclusion>
+                <artifactId>zookeeper</artifactId>
+                <groupId>org.apache.zookeeper</groupId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+
+    <dependency>
+        <groupId>org.apache.zookeeper</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>3.4.9</version>
+    </dependency>
+
+</dependencies>
 ```
 
-直接把实现类复制过来即可。
+
+
+application.properties：
+
+```properties
+# 应用名
+dubbo.application.name=boot-user-service-provider
+# 注册中心配置
+dubbo.registry.protocol=zookeeper
+dubbo.registry.address=tomxwd.top
+dubbo.registry.port=12343
+# 通信协议 dubbo协议
+dubbo.protocol.name=dubbo
+dubbo.protocol.port=20880
+# 连接监控中心
+dubbo.monitor.protocol=registry
+```
+
+
+
+BootUserServiceProviderApplication：
+
+```java
+@SpringBootApplication
+@EnableDubbo
+public class BootUserServiceProviderApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(BootUserServiceProviderApplication.class, args);
+    }
+
+}
+```
+
+
+
+UserServiceImpl：
+
+```java
+@Service
+@org.springframework.stereotype.Service
+public class UserServiceImpl implements UserService {
+
+    @Override
+    public List<UserAddress> getUserAddressList(String userId) {
+        System.out.println("UserServiceImpl.....old...");
+        // TODO Auto-generated method stub
+        UserAddress address1 = new UserAddress(1, "北京市昌平区宏福科技园综合楼3层", "1", "李老师", "010-56253825", "Y");
+        UserAddress address2 = new UserAddress(2, "深圳市宝安区西部硅谷大厦B座3层（深圳分校）", "1", "王老师", "010-56253825", "N");
+        return Arrays.asList(address1,address2);
+    }
+
+}
+```
+
+
 
 
 
@@ -101,20 +193,81 @@ pom.xml：
 添加接口依赖：
 
 ```xml
-<dependency>
-    <groupId>top.tomxwd</groupId>
-    <artifactId>gmall-interface</artifactId>
-    <version>1.0-SNAPSHOT</version>
-</dependency>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>top.tomxwd</groupId>
+        <artifactId>gmall-interface</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </dependency>
+
+    <!-- Dubbo Spring Boot Starter -->
+    <dependency>
+        <groupId>com.alibaba.boot</groupId>
+        <artifactId>dubbo-spring-boot-starter</artifactId>
+        <version>0.2.0</version>
+        <exclusions>
+            <exclusion>
+                <artifactId>zookeeper</artifactId>
+                <groupId>org.apache.zookeeper</groupId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.zookeeper</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>3.4.9</version>
+    </dependency>
+
+</dependencies>
 ```
 
 
 
-直接把实现类复制过来，然后把返回值修改一下。
+application.properties：
+
+```properties
+# 应用名
+dubbo.application.name=boot-order-service-consumer
+# 注册中心配置
+dubbo.registry.protocol=zookeeper
+dubbo.registry.address=tomxwd.top
+dubbo.registry.port=12343
+# 连接监控中心
+dubbo.monitor.protocol=registry
+
+server.port=8081
+```
 
 
 
-编写controller.OrderController：
+BootOrderServiceConsumerApplication：
+
+```java
+@SpringBootApplication
+@EnableDubbo
+public class BootOrderServiceConsumerApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(BootOrderServiceConsumerApplication.class, args);
+    }
+
+}
+```
+
+
+
+OrderController：
 
 ```java
 @Controller
@@ -127,6 +280,28 @@ public class OrderController {
     @ResponseBody
     public List<UserAddress> initOrder(@RequestParam("uid") String userId){
         return orderService.initOrder(userId);
+    }
+
+}
+```
+
+
+
+OrderServiceImpl：
+
+```java
+@Service
+public class OrderServiceImpl implements OrderService {
+
+    @Reference
+    UserService userService;
+
+    @Override
+    public List<UserAddress> initOrder(String userId) {
+        // 1、查询用户的收货地址
+        List<UserAddress> addressList = userService.getUserAddressList(userId);
+        System.out.println("addressList = " + addressList);
+        return addressList;
     }
 
 }
