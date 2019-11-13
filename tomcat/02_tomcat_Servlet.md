@@ -417,3 +417,117 @@ response：
 重定向：
 
 ![1572179970000](02_tomcat_Servlet/1572179970000.png)
+
+
+
+
+
+## 响应乱码问题
+
+设置响应信息：
+
+```java
+resp.setContentType("text/html");
+resp.setCharacterEncoding("utf-8");
+resp.getWriter().write("请求成功！");
+```
+
+或者：
+
+```java
+resp.setContentType("text/html;charset=utf-8");
+```
+
+或者：
+
+```java
+resp.setHeader("Content-Type","text/html;charset=utf-8");
+```
+
+**注意：**必须在获取流之前设置字符编码以及内容类型。
+
+
+
+## Get\Post请求乱码
+
+### Get乱码原因
+
+浏览器对URL进行编码，而服务器对URL进行解码。因为在进入到具体的代码之前，URL就已经被服务器解码过了，所以设置request是没有作用的，因此用req.setCharacterEncoding("utf-8")并不能解决get方法乱码问题。
+
+那么就需要在服务器对URL进行解析之前，设置UTF-8编码即可。
+
+解决：
+
+在服务器的配置目录里**修改server.xml**配置文件。
+
+我们知道监听的是8080端口，而就是这个地方对URL进行接收并解析，所以修改：
+
+```xml
+<Connector port="8080" protocol="HTTP/1.1" connectionTimeout="20000" redirectPort="8443" URIEncoding="UTF-8" />
+```
+
+
+
+### Post乱码原因
+
+浏览器将数据编码并提交给服务器，而服务器并不知道编码规则造成乱码；
+
+解决：
+
+```java
+req.setCharacterEncoding("utf-8");
+```
+
+**注意：**必须要在取数据之前设置，否则取出来的还是乱码。
+
+
+
+## 项目路径问题
+
+绝对路径以/开始，也就是从根开始，那么就不会带上上下文路径了，所以需要用/上下文路径/资源路径；
+
+
+
+请求转发，是从项目的根目录开始，所以不用加上下文路径；
+
+重定向是从服务器的根目录开始，需要拼上上下文路径才行；
+
+理由很简单，请求转发是服务器在做处理，那么上下文路径是可以确定的，而重定向是交给浏览器去做处理，所以需要再拼上上下文路径才行。
+
+
+
+### 获取项目上下文路径的几种方式
+
+1. `String contextPath = req.getContextPath();`
+2. `String contextPath = getServletContext().getContextPath();`
+
+
+
+### base标签
+
+可以指定页面上所有路径的基础路径，所有路径都是以指定的基础路径开始，只有**相对路径**的写法，会按照base标签指定的基础路径来拼接新的路径。
+
+在页面的head标签内加入：
+
+```html
+<base href="http://localhost:8080/test/">
+```
+
+也就是说以后所有的相对路径参考的都是base标签指定的路径，而不是当前资源。
+
+
+
+## 类加载器加载资源
+
+由于发布到服务器上之后，不可以用new File()来读取配置文件(.properties)信息，所以要用：
+
+```java
+properties.load(Xxx.class.getClassLoader().getResourceAsStream("jdbc.properties"));
+```
+
+可以看到是在WEB-INF/classes目录下，也就是类路径下进行加载；
+
+**注意：**不可以用系统的类加载器。
+
+
+
