@@ -2,10 +2,10 @@
 title: 04_Dubbo_概念_简介
 date: 2019-09-08 17:08:19
 tags: 
-- Dubbo
-  categories:
-- Java
-- Dubbo
+ - Dubbo
+categories:
+ - Java
+ - Dubbo
 ---
 
 # 04_Dubbo\_概念_简介

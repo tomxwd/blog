@@ -52,5 +52,53 @@ ssh-keygen -t rsa
 
 
 
+## 配置hexo
+
+全局_config.yml文件中增加配置：
+
+```yaml
+deploy:
+  type: git
+  repo: git@github.com:tomxwd/tomxwd.github.io.git
+  branch: master
+```
 
 
+
+然后执行：
+
+```shell
+hexo clean
+hexo generate
+hexo server
+```
+
+安装hexo-cli的可以执行hexo server，而直接安装hexo的则可能需要单独安装hexo-server；
+
+hexo3.0之后，需要单独安装hexo-server，执行`npm i hexo-server`才可以执行hexo server命令，如果`hexo server`可以执行，就不用装了。
+
+
+
+## 上传github
+
+需要安装插件：
+
+```sh
+npm install hexo-deployer-git --save
+```
+
+然后执行命令：
+
+```shell
+hexo clean
+hexo generate
+hexo deploy
+```
+
+
+
+## 绑定个人域名
+
+在source文件夹下新建一个名为CNAME的文件，在里面加入域名blog.tomxwd.top
+
+再次部署即可。

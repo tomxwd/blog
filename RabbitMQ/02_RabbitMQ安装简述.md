@@ -1,6 +1,6 @@
 ---
 title: 02_RabbitMQ安装简述
-date: 2019-06-13 ‏‎22:07:29
+date: 2019-06-13 22:07:29
 tags: 
  - Java
  - RabbitMQ

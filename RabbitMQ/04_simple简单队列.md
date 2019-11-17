@@ -1,6 +1,6 @@
 ---
 title: 04_simple简单队列
-date: 2019-06-13 ‏‎‏‎22:22:48
+date: 2019-06-13 22:22:48
 tags: 
  - Java
  - RabbitMQ
