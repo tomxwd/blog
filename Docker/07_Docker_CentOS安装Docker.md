@@ -25,3 +25,9 @@ categories:
 
  
 
+## CentOS 7安装步骤：
+
+1. `yum install -y epel-release`
+2. `yum install -y docker-io`
+3. `systemctl start docker`
+4. `docker version`验证是否安装成功
