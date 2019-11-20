@@ -35,7 +35,7 @@ npm config set cache "E:\soft\node_cache"
 
 
 
-创建环境变量NODE_PATH，值为E:\soft\Node.js\node_modules，也就是Node.js里面的node_modules文件夹。
+创建环境变量NODE_PATH，值为E:\open\soft\node.js\node_modules，也就是Node.js里面的node_modules文件夹。
 
 ![image-20191116185931489](01_Node.js%E5%AE%89%E8%A3%85/image-20191116185931489.png)
 
