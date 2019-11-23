@@ -85,7 +85,7 @@ npm config set registry https://registry.npm.taobao.org/
 需要切换回去则执行：
 
 ```shell
-npm config set registry http://www.npmjs.org
+npm config set registry https://registry.npmjs.org
 ```
 
 更换本地仓库地址以及缓存地址：
