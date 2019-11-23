@@ -83,3 +83,4 @@ npm install -g cnpm --registry=https://registry.npm.taobao.org
   - 如果没有则去上一级目录的node_modules中寻找
     - 如果有则直接使用，则再去上一级寻找，直到找到为止。
 - 直到找到磁盘的根目录，如果依然没有则报错。
+
