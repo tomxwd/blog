@@ -264,6 +264,27 @@ public class SwaggerConfig {
 
 
 
+## 配置自定义响应信息
+
+在方法上用@ApiRespones注解：
+
+- code：http的状态码
+- message：描述
+- response：默认响应类Void
+- reference：参考ApiOperation中的配置
+- responseHeaders：参考ResponseHeader属性配置说明
+- responseContainer：这些对象是有效的“List”，“Set”或者“Map”，其他无效；
+
+
+
+## 配置响应头
+
+在方法上用@ResponseHeader注解：
+
+- name：响应头名称
+- description：头描述
+- response：默认响应类Void
+
 
 
 ## 配置是否启动Swagger
@@ -327,7 +348,7 @@ public Docket docket3(){
 
 
 
-### 实体类配置
+## 实体类配置
 
 1. 只要我们的接口中，返回值中存在实体类，他就会被扫描到Swagger中
 
@@ -343,6 +364,15 @@ public Docket docket3(){
 
 2. 在实体类上打@ApiModel注解，属性上打@ApiModelProperty注解：
 
+   - value：字段说明
+   - name：重写字段名称
+   - dataType：重写字段类型
+   - required：是否必填
+   - example：举例说明
+   - hidden：是否在文档中隐藏该字段
+   - allowEmptyValue：是否允许为空
+   - allowableValue：该字段运行的值，当我们API的某个参数为枚举的时候，使用这个属性就可以清楚告诉API使用者该参数所能允许传入的值。
+   
    ```java
    @ApiModel("用户实体类")
    @Data
@@ -364,8 +394,77 @@ public Docket docket3(){
 
 ## 接口信息配置
 
+- @Api注解
+  - 对控制器的描述，主要使用tags指定标签以及description描述控制器。
+
 - @ApiOperation注解
-  - 加在方法上，可以描述方法作用
+  
+  对方法的描述
+  
+  - value：接口说明
+  - notes：接口发布说明
+  - tags：标签
+  - response：接口返回类型
+  - httpMethod：接口请求方式
+  
+- @ApiIgnore：Swagger文档不会显示拥有该注解的接口
+
+- @ApiImplicitParams：用于描述接口的非对象参数集
+
+- @ApiImplicitParam：用于描述接口的非对象参数，一般和@ApiImplicitParams组合使用
+
+  - paramType：参数放在哪个地方
+    - path：以地址的形式提交数据，根据 id 查询用户的接口就是这种形式传参。
+    - query：Query string 的方式传参。
+    - header：以流的形式提交。
+    - form：以 Form 表单的形式提交。
+  - dataType：请求的参数数据类型
+  - name：参数名字
+  - value：参数意义的描述
+  - required：是否必填
+
 - @ApiParam注解
+  
   - 加载入参上，可以描述入参
 
+```java
+@RestController
+@Api(description = "接口描述")
+public class HelloController {
+
+    @GetMapping("/hello")
+    public String hello(){
+        return "hello";
+    }
+
+    // 只要我们的接口中，返回值中存在实体类，他就会被扫描到Swagger中
+    @PostMapping("/user")
+    public User user(){
+        return new User();
+    }
+
+    @ApiOperation("根据name返回一个User")
+    @GetMapping("/createUser")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "name",value = "传入用户名",required = true,dataType = "String",paramType = "query")
+    })
+    public User api(@ApiParam("用户名") String name){
+        User user = new User();
+        user.setName(name);
+        return user;
+    }
+
+    @ApiOperation("POST方法测试")
+    @PostMapping("/postt")
+    public User postt(@ApiParam("用户") User user){
+        return user;
+    }
+
+}
+```
+
+
+
+## 总结
+
+要在生产上关闭Swagger；
