@@ -318,7 +318,233 @@ public abstract class ByteBuffer
 
 
 
+## 通道（Channel）
+
+基本介绍：
+
+![image-20191130125303614](03_Netty_NIO%E7%BC%96%E7%A8%8B/image-20191130125303614.png)
+
+1. NIO的通道类似于流，但是有如下区别
+
+   - 通道可以同时进行读写，而流只能读或者只能写
+   - 通道可以实现异步读写数据
+   - 通道可以从缓冲区读取数据，也可以写数据到缓冲区中；
+
+2. BIO中的Stream是单向的，例如FileInputStream对象只能进行读取数据的操作，而NIO中的通道（Channel）是双向的，可以读操作，也可以写操作；
+
+3. Channel在NIO中只是一个接口
+
+   `public interface Channel extends Closeable {}`
+
+   ![image-20191130130314192](03_Netty_NIO%E7%BC%96%E7%A8%8B/image-20191130130314192.png)
+
+   
+
+4. 常用的Channel类有：FileChannel、DatagramChannel、ServerSocketChannel和SocketChannel；
+
+   - FileChannel：用于文件的数据读写；
+   - DatagramChannel：用于UDP的数据读写；
+   - ServerSocketChannel和SocketChannel用于TCP的数据读写；
 
 
 
+### FileChannel类
+
+FileChannel主要用来对本地文件进行IO操作，常见的方法：
+
+![image-20191130171922648](03_Netty_NIO%E7%BC%96%E7%A8%8B/image-20191130171922648.png)
+
+1. public int read(ByteBuffer dst)，从通道读取数据并放入到缓冲区中；
+2. pulbic int write(ByteBuffer src)，把缓冲区的数据写入到通道中；
+3. public long transferFrom(ReadableByteChannel src,long position, long count)，从目标通道中复制数据到当前通道；
+4. public long transferTo(long position,long count,WritableByteChannel target)，把数据从当前通道复制给目标通道；
+
+
+
+#### 应用实例1-本地文件写数据
+
+实例要求：
+
+1. 使用ByteBuffer（缓冲）和FileChannel（通道），将"hello tomxwd"写入到file01.txt中；
+2. 文件不存在则创建
+
+代码：
+
+```java
+public class NIOFileChannel01 {
+
+    public static void main(String[] args) throws IOException {
+        String str = "hello,tomxwd";
+        // 创建一个输出流  -> Channel
+        FileOutputStream fileOutputStream = new FileOutputStream("g:\\file01.txt");
+        // 通过fileOutputStream 获取对应的FileChannel(真实类型是FileChannelImpl)
+        FileChannel fileChannel = fileOutputStream.getChannel();
+        // 创建一个缓冲区 ByteBuffer
+        ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+        // 将str放入到ByteBuffer
+        byteBuffer.put(str.getBytes());
+        // 对ByteBuffer进行翻转
+        byteBuffer.flip();
+        // 写入到FileChannel中
+        fileChannel.write(byteBuffer);
+        // 关闭流
+        fileOutputStream.close();
+    }
+
+}
+```
+
+
+
+#### 应用实例2-本地文件读数据
+
+实例要求：
+
+1. 使用ByteBuffer和FileChannel，将file01.txt中的数据读入到程序，打印到控制台；
+2. 假定文件已存在；
+
+代码：
+
+```java
+public class NIOFileChannel02 {
+
+    public static void main(String[] args) throws IOException {
+        File file = new File("g:\\file01.txt");
+        FileInputStream fileInputStream = new FileInputStream(file);
+        FileChannel channel = fileInputStream.getChannel();
+        ByteBuffer byteBuffer = ByteBuffer.allocate((int)file.length());
+        channel.read(byteBuffer);
+        // 将字节数据转换为字符串
+        System.out.println(new String(byteBuffer.array()));
+        channel.close();
+        fileInputStream.close();
+    }
+
+}
+```
+
+
+
+#### 应用实例3-使用一个Buffer完成文件读取
+
+实例要求：
+
+1. 使用FileChannel和方法read，write，完成文件的拷贝；
+2. 拷贝一个文件1.txt，放在项目下；
+
+代码：
+
+```java
+public class NIOFileChannel03 {
+    public static void main(String[] args) throws Exception {
+        FileInputStream fileInputStream = new FileInputStream("src/main/1.txt");
+        FileChannel channel01 = fileInputStream.getChannel();
+        FileOutputStream fileOutputStream = new FileOutputStream("src/main/2.txt");
+        FileChannel channel02 = fileOutputStream.getChannel();
+        ByteBuffer byteBuffer = ByteBuffer.allocate(512);
+        while (true){
+            // 在这里要对Buffer进行clear【清空Buffer，重置属性】
+            byteBuffer.clear();
+            int read = channel01.read(byteBuffer);
+            if(read==-1){
+                // 读取结束
+                break;
+            }
+            // 翻转后再写入
+            byteBuffer.flip();
+            channel02.write(byteBuffer);
+        }
+        channel01.close();
+        channel02.close();
+        fileInputStream.close();
+        fileOutputStream.close();
+    }
+}
+```
+
+
+
+#### 应用实例4-拷贝文件transferFrom方法
+
+实例要求：
+
+1. 使用FileChannel和方法transferFrom，完成文件拷贝；
+2. 拷贝到项目下；
+
+代码：
+
+```java
+public class NIOFileChannel04 {
+    public static void main(String[] args) throws IOException {
+        File file1 = new File("g:\\file01.txt");
+        File file2 = new File("g:\\file02.txt");
+        FileInputStream fileInputStream = new FileInputStream(file1);
+        FileOutputStream fileOutputStream = new FileOutputStream(file2);
+        FileChannel source = fileInputStream.getChannel();
+        FileChannel dest = fileOutputStream.getChannel();
+        // 使用transferFrom完成拷贝
+        dest.transferFrom(source,0,source.size());
+        source.close();
+        dest.close();
+        fileInputStream.close();
+        fileOutputStream.close();
+    }
+}
+```
+
+
+
+## 关于Buffer和Channel的注意事项和细节
+
+1. ByteBuffer支持类型化的put和get，put进去是什么数据类型，get就要使用对应的数据类型取出，否则可能会报BufferUnderflowEexception异常；
+
+   ```java
+   public class NIOByteBufferPutGet {
+       public static void main(String[] args) {
+           ByteBuffer byteBuffer = ByteBuffer.allocate(64);
+           byteBuffer.putInt(100);
+           byteBuffer.putLong(9L);
+           byteBuffer.putChar('啊');
+           byteBuffer.putShort(((short) 4));
+           // 取出
+           byteBuffer.flip();
+           System.out.println(byteBuffer.getLong());
+           System.out.println(byteBuffer.getInt());
+           System.out.println(byteBuffer.getChar());
+           // short用long来取
+           System.out.println(byteBuffer.getLong());
+       }
+   }
+   ```
+
+   可以看到，如果取的类型不对，会造成数据溢出，有时会抛出**BufferUnderflowEexception**异常；
+
+2. 可以将一个普通的Buffer转成只读Buffer，写入的话会报ReadOnlyBufferException；
+
+   ```java
+   public class ReadOnlyBuffer {
+       public static void main(String[] args) {
+           ByteBuffer buffer = ByteBuffer.allocate(64);
+           for (int i = 0; i < 64; i++) {
+               buffer.put((byte) i);
+           }
+           buffer.flip();
+           // 得到一个只读的Buffer
+           ByteBuffer readOnlyBuffer = buffer.asReadOnlyBuffer();
+           System.out.println(readOnlyBuffer.getClass());
+           // 读取
+           while (readOnlyBuffer.hasRemaining()){
+               System.out.println("readOnlyBuffer = " + readOnlyBuffer.get());
+           }
+           // ReadOnlyBufferException
+           readOnlyBuffer.put((byte)100);
+       }
+   }
+   ```
+
+3. NIO还提供了MappedByteBuffer，可以让文件直接在内存（堆外内存）中进行修改，而如何同步到文件则由NIO完成；
+
+4. **NIO还支持通过多个Buffer（即Buffer数组）完成读写操作**，即Scattering和Gatering；
+
+5. 
 
