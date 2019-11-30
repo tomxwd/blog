@@ -542,9 +542,219 @@ public class NIOFileChannel04 {
    }
    ```
 
-3. NIO还提供了MappedByteBuffer，可以让文件直接在内存（堆外内存）中进行修改，而如何同步到文件则由NIO完成；
+3. NIO还提供了**MappedByteBuffer**，可以让文件直接**在内存（堆外内存）中进行修改，操作系统不需要拷贝一次**，而如何同步到文件则由NIO完成；
 
-4. **NIO还支持通过多个Buffer（即Buffer数组）完成读写操作**，即Scattering和Gatering；
+   ```java
+   public class MappedByteBufferTest {
+   
+       public static void main(String[] args) throws IOException {
+           RandomAccessFile rw = new RandomAccessFile("src/main/1.txt", "rw");
+           // 获取对应的文件通道
+           FileChannel channel = rw.getChannel();
+           /**
+            * 参数1：FileChannle.MapMode.READ_WRITE使用读写模式
+            * 参数2：0   可以直接修改的起始位置
+            * 参数3: 5   映射到内存的大小，即将1.txt的多少个字节映射到内存
+            * 可以直接修改的范围就是[0-5)，并不包括 5,5的意思是从0开始数5个
+            * 实际类型是DirectByteBuffer
+            */
+           MappedByteBuffer mappedByteBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, 5);
+           mappedByteBuffer.put(0, (byte) 'U');
+           mappedByteBuffer.put(3, (byte) 'U');
+           rw.close();
+       }
+   
+   }
+   ```
 
-5. 
+4. **NIO还支持通过多个Buffer（即Buffer数组）完成读写操作**，即Scattering和Gathering；
+
+   - Scattering：将数据写入到Buffer时，可以采用Buffer数组依次写入【分散】
+   - Gathering：从Buffer中读取数据的时候，可以采用Buffer数组依次读写【聚合】
+
+   ```java
+   public class NIOScatteringAndGathering {
+       public static void main(String[] args) throws IOException {
+           // 使用ServerSocketChannel和SocketChannel
+           ServerSocketChannel open = ServerSocketChannel.open();
+           // 创建端口
+           InetSocketAddress inetSocketAddress = new InetSocketAddress(7000);
+           // 绑定端口到Socket并启动
+           open.socket().bind(inetSocketAddress);
+           // 创建Buffer数组
+           ByteBuffer[] byteBuffers = new ByteBuffer[2];
+           byteBuffers[0] = ByteBuffer.allocate(5);
+           byteBuffers[1] = ByteBuffer.allocate(3);
+           // 等待客户端连接(telnet)
+           SocketChannel socketChannel = open.accept();
+           // 最多接收8个字节
+           int messageLength = 8;
+           // 循环读取
+           while (true) {
+               int byteRead = 0;
+               while (byteRead < messageLength) {
+                   long r = socketChannel.read(byteBuffers);
+                   // 累计读取的字节数
+                   byteRead += r;
+                   System.out.println("byteRead = " + byteRead);
+                   // 使用流打印，看看当前的buffer的position和limit
+                   Arrays.asList(byteBuffers).stream().map(byteBuffer ->
+                           "position = " + byteBuffer.position() + ",limit = " + byteBuffer.limit()
+                   ).forEach(System.out::println);
+               }
+               // 将所有的buffer进行翻转flip
+               Arrays.asList(byteBuffers).forEach(byteBuffer -> byteBuffer.flip());
+               // 将数据读出显示到客户端
+               long byteWrite = 0;
+               while (byteWrite < messageLength) {
+                   long w = socketChannel.write(byteBuffers);
+                   byteWrite += w;
+               }
+               // 将所有buffer进行clear复位
+               Arrays.asList(byteBuffers).forEach(byteBuffer -> byteBuffer.clear());
+               System.out.println("byteRead = " + byteRead + ", byteWrite = " + byteWrite + ",messageLength = " + messageLength);
+           }
+       }
+   }
+   ```
+
+
+
+## Selector（选择器）
+
+基本介绍：
+
+1. Java的NIO，用非阻塞的IO方式。可以用一个线程，处理多个客户端连接，就会使用到**Selector（选择器）**；
+2. **Selector能够检测多个注册的通道上是否有事件发生（注意：多个Channel以事件的方式注册到同一个Selector）**，如果有事件发生，便获取事件然后针对每个事件进行相应的处理。这样就可以一个单线程去管理多个通道，也就是管理多个连接和请求；
+3. 只有在连接/通道真正有读写事件发生的时候，才会进行读写，大大减少了系统开销，并且不必为每个连接都创建一个线程，不用去维护多个线程。
+4. 避免了多线程之间的上下文切换导致的开销；
+
+特点：
+
+1. Netty的IO线程NioEventLoop聚合了Selector（选择器，也叫多路复用器），可以同时并发处理成百上千个客户端连接；
+2. 当线程从某客户端Socket通道进行读写数据的时候，若没有数据可用时，该线程可以进行其他任务；
+3. 线程通常将非阻塞IO的空闲时间用于其他通道上执行IO操作，所以单独的线程可以管理多个输入和输出通道；
+4. 由于读写操作都是非阻塞的，这就可以充分提升IO线程的运行效率，避免由于频繁I/O阻塞导致的线程挂起；
+5. 一个I/O线程可以并发处理N个客户端连接和读写操作，这从根本上解决了传统同步阻塞I/O一连接一线程模型，架构的性能、弹性伸缩能力和可靠性都得到了极大的提升。
+
+
+
+### Selector类相关方法
+
+Selector类是一个抽象类
+
+![image-20191130212830869](03_Netty_NIO%E7%BC%96%E7%A8%8B/image-20191130212830869.png)
+
+- public static Selector open()：得到一个选择器对象
+- public int select(long timeout)：监控所有注册的通道，当其中有IO操作可以进行的时候，将对应的SelectorKey加入到内部集合中并返回，参数用来设置超时时间
+  - 如果调用的是不带参数的select方法，是阻塞的，直到至少获取到一个事件；
+  - 指定了超时时间，则就算没有监听到任何事件发生，也会返回；
+- public int selectNow()：如果当前没有得到任何事件，就返回；
+- public Set\<SelectionKey> selectedKeys()：从内部集合中得到所有的SelectionKey；跟select方法不一样的是，select方法返回的是有事件发生的SelectionKey，而这个方法返回的是所有的SelectionKey；
+
+
+
+注意事项：
+
+1. NIO中的ServerSocketChannel功能类似ServerSocket，SocketChannel功能类似Socket；
+2. selector相关方法说明：
+   - selector.select()：阻塞
+   - selector.select(1000)：阻塞1000毫秒，在1000毫秒后返回
+   - selector.wakeup()：唤醒selector，比如正在处于select(1000)等待中，调用wakeup则立马返回；
+   - selectro.selectNow()：不阻塞，立马返还
+
+
+
+## NIO非阻塞网络编程原理分析图
+
+NIO非阻塞网络编程相关（Selector、SelectionKey、ServerSocketChannel和SocketChannel）关系梳理图：
+
+![image-20191130220621495](03_Netty_NIO%E7%BC%96%E7%A8%8B/image-20191130220621495.png)
+
+说明：
+
+1. 当客户端连接时，会通过ServerSocketChannel得到对应的SocketChannel；
+2. Selector进行监听select方法，返回有事件发生的通道的个数；
+3. 将SocketChannel注册到Selector上【register(Selector sel,int ops)】；
+   - 一个Selector上可以注册多个SocketChannel
+4. 注册后返回SelectionKey，会和该Selector关联（集合Set）；
+5. 进一步得到各个SelectionKey（有事件发生的）
+6. 再通过SelectionKey可以反向获取SocketChannel，channel()方法获取；
+7. 可以通过得到的Channel完成业务处理；
+
+
+
+### NIO非阻塞网络编程示例代码
+
+案例要求：
+
+1. 编写一个NIO入门案例，实现服务器端和客户端之间的简单通讯（非阻塞）
+2. 目的：理解NIO非阻塞网络编程机制
+
+代码：
+
+```java
+public class NIOServer {
+
+    public static void main(String[] args) throws IOException {
+        // 创建ServerSocketChannel  -> ServerSocket
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        // 得到一个Selector对象
+        Selector selector = Selector.open();
+        // 绑定端口6666，在服务器端监听
+        serverSocketChannel.socket().bind(new InetSocketAddress(6666));
+        // 设置为非阻塞
+        serverSocketChannel.configureBlocking(false);
+        // 把ServerSocketChannel注册到Selector，关心的事件是OP_ACCEPT
+        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+        // 循环等待客户端连接
+        while (true){
+            // 这里等待一秒，如果没有事件发生就返回
+            if(selector.select(1000)==0){
+                // 没有事件发生
+                System.out.println("服务器等待了一秒，无连接");
+                continue;
+            }
+            // 如果返回>0,就获取到相关的SelectionKey集合
+            // 1. 如果返回的>0，表示已经获取到关注的事件
+            // 2. 通过selectedKeys() 返回关注事件的集合
+            // 通过selectionKeys反向获取通道
+            Set<SelectionKey> selectionKeys = selector.selectedKeys();
+            // 遍历Set<SelectionKey>集合，使用迭代器遍历
+            Iterator<SelectionKey> keyIterator = selectionKeys.iterator();
+            while (keyIterator.hasNext()){
+                // 获取到SelectionKey
+                SelectionKey key = keyIterator.next();
+                // 根据key对应的通道发生的事件做相应的处理
+                if(key.isAcceptable()){
+                    // 如果是OP_ACCEPT事件，有新的客户端连接
+                    // 给该客户端生成SocketChannel
+                    SocketChannel socketChannel = serverSocketChannel.accept();
+                    // 将当前的socketChannel注册到Selector上，关注事件为OP_READ，同时给SocketChannel关联一个Buffer
+                    socketChannel.register(selector,SelectionKey.OP_READ, ByteBuffer.allocate(1024));
+                }
+                if(key.isReadable()){
+                    // 如果是OP_READ事件
+                    // 通过key反向获取到对应的channel
+                    SocketChannel channel = (SocketChannel) key.channel();
+                    // 获取到该channel关联的Buffer
+                    ByteBuffer buffer = (ByteBuffer) key.attachment();
+                    channel.read(buffer);
+                    System.out.println("from 客户端 : "+new String(buffer.array()));
+                }
+                // 手动从集合中删除当前的selectKey，防止重复操作
+                keyIterator.remove();
+            }
+
+        }
+    }
+
+}
+```
+
+
+
+
+
+
 
