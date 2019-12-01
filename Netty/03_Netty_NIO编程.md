@@ -795,7 +795,43 @@ public class NIOClient {
    - public static final int **OP_CONNECT**：代表连接已经建立，值为8【1<<3】
    - public static final int **OP_WRITE**：代表写操作，值为4【1<<2】
    - public static final int **OP_READ**：代表读操作，值为1【1<<0】
-2. 
+2. SelectionKey相关方法：
+   - public abstract Selector selector()：得到与之关联的Selector对象
+   - public abstract SelectableChannel channel()：得到与之关联的通道
+   - public final Object attachment()：得到与之关联的共享数据，如Buffer
+   - public abstract SelectionKey interestOps(int ops)：设置或改变监听事件
+   - pubilc final boolean isAcceptable()：是否可以accept
+   - public final boolean isReadable()：是否可以读
+   - public final boolean isWritable()：是否可以写
+
+
+
+## ServerSocketChannel
+
+1. ServerSocketChannel在**服务器监听新的客户端Socket**连接；
+2. ServerSocketChannel相关方法：
+   - pulbic static ServerSocketChannel open()：得到一个ServerSocketChannel通道对象；
+   - public final ServerSocketChannel bind(SocketAddress local)：设置服务器端端口号；
+   - public final SelectableChannel configureBlocking(boolean block)：设置阻塞或非阻塞模式，取值false标识采用非阻塞模式；
+   - public SocketChannel accept()：接受一个连接，返回代表这个连接的通道对象；
+   - public final SelectionKey register(Selector sel,int ops)：注册一个选择器并设置监听事件；
+
+
+
+## SocketChannel
+
+1. SocketChannel，网络IO通道，**具体负责进行读写操作**。NIO把缓冲区的数据写入通道，或者把通道里的数据读到缓冲区；
+2. SocketChannel相关方法：
+   - public static SocketChannel open()：得到一个SocketChannel通道；
+   - public final SelectableChannel configureBlocking(boolean block)：设置阻塞或非阻塞模式，取值false表示采用非阻塞模式；
+   - public boolean connect(SocketAddress remote)：连接服务器；
+   - public boolean finishConnect()：如果connect方法连接失败，接下来就要通过该方法完成连接操作；
+   - public int write(ByteBuffer src)：往通道里写入数据；
+   - public int read(ByteBuffer dst)：从通道里读取数据；
+   - public final SelectionKey register(Selector sel,int ops,Object att)：注册一个选择器并设置监听事件，最后一个参数可以设置共享数据；
+   - public final void close()：关闭通道；
+
+
 
 
 
