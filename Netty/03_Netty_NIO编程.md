@@ -650,7 +650,7 @@ Selector类是一个抽象类
   - 如果调用的是不带参数的select方法，是阻塞的，直到至少获取到一个事件；
   - 指定了超时时间，则就算没有监听到任何事件发生，也会返回；
 - public int selectNow()：如果当前没有得到任何事件，就返回；
-- public Set\<SelectionKey> selectedKeys()：从内部集合中得到所有的SelectionKey；跟select方法不一样的是，select方法返回的是有事件发生的SelectionKey，而这个方法返回的是所有的SelectionKey；
+- public Set\<SelectionKey> selectedKeys()：从内部集合中得到所有的SelectionKey；
 
 
 
@@ -691,7 +691,7 @@ NIO非阻塞网络编程相关（Selector、SelectionKey、ServerSocketChannel�
 1. 编写一个NIO入门案例，实现服务器端和客户端之间的简单通讯（非阻塞）
 2. 目的：理解NIO非阻塞网络编程机制
 
-代码：
+服务器端代码：
 
 ```java
 public class NIOServer {
@@ -708,9 +708,9 @@ public class NIOServer {
         // 把ServerSocketChannel注册到Selector，关心的事件是OP_ACCEPT
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
         // 循环等待客户端连接
-        while (true){
+        while (true) {
             // 这里等待一秒，如果没有事件发生就返回
-            if(selector.select(1000)==0){
+            if (selector.select(1000) == 0) {
                 // 没有事件发生
                 System.out.println("服务器等待了一秒，无连接");
                 continue;
@@ -722,25 +722,28 @@ public class NIOServer {
             Set<SelectionKey> selectionKeys = selector.selectedKeys();
             // 遍历Set<SelectionKey>集合，使用迭代器遍历
             Iterator<SelectionKey> keyIterator = selectionKeys.iterator();
-            while (keyIterator.hasNext()){
+            while (keyIterator.hasNext()) {
                 // 获取到SelectionKey
                 SelectionKey key = keyIterator.next();
                 // 根据key对应的通道发生的事件做相应的处理
-                if(key.isAcceptable()){
+                if (key.isAcceptable()) {
                     // 如果是OP_ACCEPT事件，有新的客户端连接
                     // 给该客户端生成SocketChannel
                     SocketChannel socketChannel = serverSocketChannel.accept();
+                    socketChannel.configureBlocking(false);
+                    System.out.println("客户端连接成功，生成了一个SocketChannel" + socketChannel.hashCode());
                     // 将当前的socketChannel注册到Selector上，关注事件为OP_READ，同时给SocketChannel关联一个Buffer
-                    socketChannel.register(selector,SelectionKey.OP_READ, ByteBuffer.allocate(1024));
+                    socketChannel.register(selector, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
                 }
-                if(key.isReadable()){
+                if (key.isReadable()) {
                     // 如果是OP_READ事件
                     // 通过key反向获取到对应的channel
                     SocketChannel channel = (SocketChannel) key.channel();
                     // 获取到该channel关联的Buffer
                     ByteBuffer buffer = (ByteBuffer) key.attachment();
                     channel.read(buffer);
-                    System.out.println("from 客户端 : "+new String(buffer.array()));
+                    System.out.println("from 客户端 : " + new String(buffer.array()));
+                    buffer.clear();
                 }
                 // 手动从集合中删除当前的selectKey，防止重复操作
                 keyIterator.remove();
@@ -748,9 +751,53 @@ public class NIOServer {
 
         }
     }
+    
+}
+```
+
+客户端代码：
+
+```java
+public class NIOClient {
+
+    public static void main(String[] args) throws IOException {
+        // 得到一个网络通道
+        SocketChannel socketChannel = SocketChannel.open();
+        // 设置非阻塞模式
+        socketChannel.configureBlocking(false);
+        // 提供服务器端的ip和端口信息
+        InetSocketAddress inetSocketAddress = new InetSocketAddress("127.0.0.1", 6666);
+        // 连接服务器
+        if (!socketChannel.connect(inetSocketAddress)) {
+            // 连接失败
+            while (!socketChannel.finishConnect()) {
+                System.out.println("因为连接需要时间，客户端不会阻塞，可以做其他工作...");
+            }
+        }
+        // 连接成功，发送数据
+        String s = "hello,tomxwd~";
+        // 包裹一个字节数组到Buffer中
+        ByteBuffer buffer = ByteBuffer.wrap(s.getBytes());
+        // 发送数据，将buffer数据写入channel
+        socketChannel.write(buffer);
+        System.in.read();
+    }
 
 }
 ```
+
+
+
+## SelectionKey
+
+1. SelectionKey，表示Selector和网络通道的注册关系，共四种：
+   - public static final int **OP_ACCEPT**：有新的网络连接可以accept，值为16【1<<4】
+   - public static final int **OP_CONNECT**：代表连接已经建立，值为8【1<<3】
+   - public static final int **OP_WRITE**：代表写操作，值为4【1<<2】
+   - public static final int **OP_READ**：代表读操作，值为1【1<<0】
+2. 
+
+
 
 
 
