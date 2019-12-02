@@ -133,7 +133,128 @@ Linux在2.4版本中，做了一些修改，避免了从内核缓冲区拷贝到
 1. 使用传统的IO方法传递一个大文件；
 2. 使用NIO零拷贝的方式传递（transferTo）一个大文件；
 3. 看看两个传递方式耗费时间分别是多少；
-4. 
+
+
+
+### 传统的零拷贝
+
+服务器端：
+
+```java
+public class OldIOServer {
+
+    public static void main(String[] args) throws IOException {
+        ServerSocket serverSocket = new ServerSocket(7001);
+        while (true){
+            Socket socket = serverSocket.accept();
+            DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+            try{
+                byte[] byteArray = new byte[4096];
+                while (true){
+                    int readCount = dataInputStream.read(byteArray, 0, byteArray.length);
+                    if(-1==readCount){
+                        break;
+                    }
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+}
+```
+
+客户端：
+
+```java
+public class OldIOClient {
+
+    public static void main(String[] args) throws IOException {
+        Socket socket = new Socket("localhost", 7001);
+        String fileName = "Xxx.zip";
+        FileInputStream inputStream = new FileInputStream(fileName);
+        DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+        byte[] buffer = new byte[4096];
+        long readCount = 0;
+        long total = 0;
+        long startTime = System.currentTimeMillis();
+        while ((readCount = inputStream.read(buffer))>=0){
+            total += readCount;
+            dataOutputStream.write(buffer);
+        }
+        System.out.println("发送总字节数："+total+"，耗时："+(System.currentTimeMillis()-startTime));
+        dataOutputStream.close();
+        socket.close();
+        inputStream.close();
+    }
+
+}
+```
+
+
+
+### transferTo零拷贝
+
+服务器端：
+
+```java
+public class NewIOServer {
+
+    public static void main(String[] args) throws IOException {
+        InetSocketAddress inetSocketAddress = new InetSocketAddress(7001);
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        ServerSocket serverSocket = serverSocketChannel.socket();
+        serverSocket.bind(inetSocketAddress);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(4096);
+        while (true){
+            SocketChannel socketChannel = serverSocketChannel.accept();
+            int readCount = 0;
+            while (-1!=readCount){
+                readCount = socketChannel.read(byteBuffer);
+            }
+            // byteBuffer倒带，position=0，mark作废
+            byteBuffer.rewind();
+        }
+    }
+
+}
+```
+
+客户端：
+
+```java
+public class NewIOClient {
+
+    public static void main(String[] args) throws IOException {
+        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel.connect(new InetSocketAddress("localhost",7001));
+        String fileName = "Xxx.zip";
+        // 得到一个文件的Channel
+        FileChannel fileChannel = new FileInputStream(fileName).getChannel();
+        // 准备发送
+        long startTime = System.currentTimeMillis();
+        // 在Linux下一个transferTo方法就可以完成传输
+        // 在windows下一次调用transferTo只能发送8m，就需要分段传输文件，而且要注意传输时的位置
+        // transferTo底层就使用了零拷贝
+        long transferCount = fileChannel.transferTo(0, fileChannel.size(), socketChannel);
+        System.out.println("发送的总的字节数："+transferCount+"耗时："+(System.currentTimeMillis()-startTime));
+        fileChannel.close();
+        socketChannel.close();
+    }
+
+}
+```
+
+
+
+
+
+
+
+
+
+
 
 
 
