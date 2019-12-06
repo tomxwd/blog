@@ -264,7 +264,7 @@ SpringCloud选择Dalston.SR1，SpringBoot选择1.5.9.RELEASE
      </project>
      ```
 
-   - YML文件：
+   - yaml文件：
 
      ```yaml
      server:
@@ -281,7 +281,7 @@ SpringCloud选择Dalston.SR1，SpringBoot选择1.5.9.RELEASE
        datasource:
          type: com.alibaba.druid.pool.DruidDataSource            # 当前数据源操作类型
          driver-class-name: org.gjt.mm.mysql.Driver              # mysql驱动包
-         url: jdbc:mysql://ip:12350/cloudDB01?useUnicode=true&characterEncoding=utf8        # 数据库名称
+         url: jdbc:mysql://loaclhost:3306/cloudDB01?useUnicode=true&characterEncoding=utf8        # 数据库名称
          username: root
          password: root
          dbcp2:
