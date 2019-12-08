@@ -447,12 +447,131 @@ public class ConfigBean {
 
 ### 自定义规则深度解析
 
+![继承关系](06_SpringCloud_Ribbon%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/image-20191208104546675.png)
+
 - 问题：依旧轮询策略，但是加上新需求，每个服务器要求被调用5次，也就是说之前是每个机器一次，再到下一个及其，现在是每台机器5次才轮到下一个机器；
 
 - 解析源码：
+
 - 参考源码修改为我们需求要求的FiveTimeRobinRule.java
+
+  ```java
+  /**
+   * 五次轮询策略
+   *
+   * @author xieweidu
+   * @createDate 2019-12-07 21:38
+   */
+  public class FiveTimeRobinRule extends AbstractLoadBalancerRule {
+  
+      /**
+       * 当total==5的时候，才往下走一步轮询，然后total置零 currentIndex++，需要注意总共的index有多少
+       */
+      private AtomicInteger total = new AtomicInteger(0);
+      /**
+       * 当前对外提供服务的服务器地址
+       */
+      private AtomicInteger currentIndex = new AtomicInteger(0);
+  
+      public Server choose(ILoadBalancer lb, Object key) {
+          if (lb == null) {
+              return null;
+          }
+          Server server = null;
+  
+          while (server == null) {
+              if (Thread.interrupted()) {
+                  return null;
+              }
+              List<Server> upList = lb.getReachableServers();
+              List<Server> allList = lb.getAllServers();
+  
+              int serverCount = allList.size();
+              if (serverCount == 0) {
+                  /*
+                   * No servers. End regardless of pass, because subsequent passes
+                   * only get more restrictive.
+                   */
+                  return null;
+              }
+  
+  //            int index = rand.nextInt(serverCount);
+  //            server = upList.get(index);
+              // 主要就是下面这段代码做到了5次轮询
+              if (total.get() < 5) {
+                  total.incrementAndGet();
+                  server = upList.get(currentIndex.get());
+              } else {
+                  total.set(0);
+                  currentIndex.incrementAndGet();
+                  if (currentIndex.get() >= upList.size()) {
+                      currentIndex.set(0);
+                  }
+              }
+  
+              if (server == null) {
+                  /*
+                   * The only time this should happen is if the server list were
+                   * somehow trimmed. This is a transient condition. Retry after
+                   * yielding.
+                   */
+                  Thread.yield();
+                  continue;
+              }
+  
+              if (server.isAlive()) {
+                  return (server);
+              }
+  
+              // Shouldn't actually happen.. but must be transient or a bug.
+              server = null;
+              Thread.yield();
+          }
+  
+          return server;
+  
+      }
+  
+      @Override
+      public Server choose(Object key) {
+          return choose(getLoadBalancer(), key);
+      }
+  
+      @Override
+      public void initWithNiwsConfig(IClientConfig clientConfig) {
+          // TODO Auto-generated method stub
+  
+      }
+  }
+  ```
+
+- 改为我们自定义的策略
+
+  ```java
+  @Configuration
+  public class MySelfRule {
+  
+      @Bean
+      public IRule myRule(){
+          // 默认是轮询，自定义为随机
+  //        return new RandomRule();
+          // 改为自定义的五次轮询
+          return new FiveTimeRobinRule();
+      }
+  
+  }
+  ```
+
 - 调用
+
+  ```java
+  // 在启动微服务的时候就能去加载我们自定义的Ribbon配置类，从而使配置生效
+  @RibbonClient(name="MICROSERVICECLOUD-DEPT",configuration= MySelfRule.class)
+  ```
+
 - 测试
+
+  访问： http://localhost/consumer/dept/list ，查看db_source的变化即可；
 
 
 
