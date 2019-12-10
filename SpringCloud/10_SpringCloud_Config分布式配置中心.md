@@ -146,6 +146,17 @@ SpringCloud Config分为**服务端和客户端两部分**；
                  <groupId>org.springframework.cloud</groupId>
                  <artifactId>spring-cloud-config-server</artifactId>
              </dependency>
+             <!-- 将微服务provider注册进Eureka -->
+             <!--        <dependency>-->
+             <!--            <groupId>org.springframework.cloud</groupId>-->
+             <!--            <artifactId>spring-cloud-starter-eureka</artifactId>-->
+             <!--        </dependency>-->
+             <!-- 报错就加这个依赖 -->
+             <!--        <dependency>-->
+             <!--            <groupId>org.eclipse.jgit</groupId>-->
+             <!--            <artifactId>org.eclipse.jgit</artifactId>-->
+             <!--            <version>4.6.0.201612231935-r</version>-->
+             <!--        </dependency>-->
              <!-- 图形化监控 -->
              <dependency>
                  <groupId>org.springframework.boot</groupId>
@@ -195,8 +206,17 @@ SpringCloud Config分为**服务端和客户端两部分**；
        config:
          server:
            git:
-             uri: git@github.com:tomxwd/microservicecloud-config.git
+   #          uri: git@github.com:tomxwd/microservicecloud-config.git
+             uri: https://github.com/tomxwd/microservicecloud-config.git
+             default-label: master
+             search-paths: /
+   #          ignoreLocalSshSettings: true
+   ##          hostKey: someHostKey
+   ##          hostKeyAlgorithm: ssh-rsa
+   #          privateKey:
    ```
+
+   如果报git clone错误就用https的形式填写GitHub仓库地址；
 
 8. 主启动类Config_3344_StartSpringCloudApp
 
@@ -219,17 +239,233 @@ SpringCloud Config分为**服务端和客户端两部分**；
 10. 测试通过Config微服务是否可以从GitHub上获取配置内容
 
     - 启动微服务3344
-    - 访问：http://config-3344.com:3344/application-dev.yaml
-    - 访问：http://config-3344.com:3344/application-test.yaml
-    - 访问：http://config-3344.com:3344/application-xxx.yaml
+    - 访问：http://config-3344.com:3344/application-dev.yaml，或者yml
+    - 访问：http://config-3344.com:3344/application-test.yaml，或者yml
+    - 访问：http://config-3344.com:3344/application-xxx.yaml，或者yml
+      - 得到的是默认的
 
 11. 配置读取规则
+
+    - 官网
+    - /{application}-{profile}.yaml
+      - http://config-3344.com:3344/application-dev.yaml
+      - http://config-3344.com:3344/application-test.yaml
+      - http://config-3344.com:3344/application-xxx.yaml（不存在的配置）
+    - /{application}/{profile}[/{label}]
+      - http://config-3344.com:3344/application/dev/master
+      - http://config-3344.com:3344/application/test/master
+      - http://config-3344.com:3344/application/xxx/master
+    - /{label}/{application}-{profile}.yaml
+      - http://config-3344.com:3344/master/application-dev.yaml
+      - http://config-3344.com:3344/master/application-test.yaml
+    - /{application}-{profile}.properties
+    - /{label}/{application}-{profile}.properties
 
 12. 成功实现了用SpringCloud Config通过GitHub的方式获取配置信息
 
 
 
 ## SpringCloud Config客户端配置与测试
+
+1. 在本地microservicecloud-config仓库路径下新建文件microservicecloud-config-client.yaml
+
+2. microservicecloud-config-client.yaml内容
+
+   ```yaml
+   spring:
+     profiles:
+       active:
+         - dev
+   
+   ---
+   server:
+     port: 8201
+   spring:
+     profiles: dev
+     application:
+       name: microservice-config-client
+   eureka:
+     client:
+       service-url: http://eureka-dev.com:7001/eureka/
+   ---
+   server:
+     port: 8202
+   spring:
+     profiles: test
+     application:
+       name: microservice-config-client
+   eureka:
+     client:
+       service-url: http://eureka-test.com:7001/eureka/
+   ```
+
+3. 将上一步的文件推送到GitHub中；
+
+4. 新建microservicecloud-config-client-3355
+
+5. pom.xml
+
+   - 修改部分：
+
+     ```xml
+     <!-- SpringCloud Config 客户端 Client -->
+     <dependency>
+         <groupId>org.springframework.cloud</groupId>
+         <artifactId>spring-cloud-starter-config</artifactId>
+     </dependency>
+     ```
+
+   - 完整内容：
+
+     ```xml
+     <?xml version="1.0" encoding="UTF-8"?>
+     <project xmlns="http://maven.apache.org/POM/4.0.0"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         <parent>
+             <artifactId>microservicecloud</artifactId>
+             <groupId>top.tomxwd</groupId>
+             <version>1.0-SNAPSHOT</version>
+         </parent>
+         <modelVersion>4.0.0</modelVersion>
+     
+         <artifactId>microservicecloud-config-client-3355</artifactId>
+     
+         <dependencies>
+             <!-- SpringCloud Config 客户端 Client -->
+             <dependency>
+                 <groupId>org.springframework.cloud</groupId>
+                 <artifactId>spring-cloud-starter-config</artifactId>
+             </dependency>
+              <!--将微服务provider注册进Eureka -->
+             <dependency>
+                 <groupId>org.springframework.cloud</groupId>
+                 <artifactId>spring-cloud-starter-eureka</artifactId>
+             </dependency>
+             <!-- 图形化监控 -->
+             <dependency>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-starter-actuator</artifactId>
+             </dependency>
+             <!-- 熔断 -->
+             <dependency>
+                 <groupId>org.springframework.cloud</groupId>
+                 <artifactId>spring-cloud-starter-hystrix</artifactId>
+             </dependency>
+             <!-- 内嵌jetty容器 -->
+             <dependency>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-starter-jetty</artifactId>
+             </dependency>
+             <dependency>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-starter-web</artifactId>
+             </dependency>
+             <dependency>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-starter-test</artifactId>
+             </dependency>
+             <!-- 热部署 -->
+             <dependency>
+                 <groupId>org.springframework</groupId>
+                 <artifactId>springloaded</artifactId>
+             </dependency>
+             <dependency>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-devtools</artifactId>
+             </dependency>
+         </dependencies>
+     
+     </project>
+     ```
+
+6. **bootstrap.yaml**
+
+   - 是什么？
+
+     application.yaml是用户级的资源配置项
+
+     bootstrap.yaml是系统级的，**优先级更高**
+
+     SpringCloud会创建一个“Bootstrap Context”，作为Spring应用的“Application Context”的**父上下文**。在初始化的时候，“Bootstrap Context”负责从外部源加载配置属性并解析配置。这两个上下文共享一个从外部获取的“Environment”。“Bootstrap”属性拥有更高的优先级，默认情况下，它们不会被本地配置覆盖。
+
+     “Bootstrap Context”和“Application Context”有着不同的约定，所以增加一个“bootstrap.yaml”文件，保证“Bootstrap Context”和“Application Context”配置的分离；
+
+   - 内容：
+
+     ```yaml
+     spring:
+       cloud:
+         config:
+           name: microservicecloud-config-client # 需要从github上面读取的资源名称，注意没有yaml后缀名
+           profile: dev                          # 本次访问的配置项
+           label: master
+           uri: http://config-3344.com:3344          # 本微服务启动后先去3344服务，通过SpringCloudConfig获取Github的服务地址
+     ```
+
+7. application.yaml
+
+   ```yaml
+   spring:
+     application:
+       name: microservicecloud-config-client
+   ```
+
+8. windows下修改hosts文件，增加映射
+
+   `127.0.0.1 client-config.com`
+
+9. 新建rest类，验证是否能够从GitHub上读取配置
+
+   ```java
+   @RestController
+   public class ConfigClientRest {
+   
+       @Value("${spring.application.name}")
+       private String applicationName;
+   
+       @Value("${eureka.client.service-url}")
+       private String eurekaServers;
+   
+       @Value("${server.port}")
+       private String port;
+   
+       @RequestMapping("/config")
+       public String getConfig() {
+           String str = "applicationName: " + applicationName + "\t eurekaServers: " + eurekaServers + "\t port: " + port;
+           System.out.println("*****************" + str);
+           return str;
+       }
+   
+   }
+   ```
+
+10. 主启动类ConfigClient_3355_StartSpringCloudApp
+
+    ```java
+    @SpringBootApplication
+    public class ConfigClient_3355_StartSpringCloudApp {
+        public static void main(String[] args) {
+            SpringApplication.run(ConfigClient_3355_StartSpringCloudApp.class, args);
+        }
+    }
+    ```
+
+11. 测试
+
+    - 启动Config配置中心3344微服务并自测
+      - http://config-3344.com:3344/application-dev.yaml
+    - 启动3355作为Client准备访问
+    - boostrap.yaml里面的profile值是什么，就决定了服务从git上读到什么
+      - 假如目前是profile:dev
+        - dev默认在GitHub上对应的端口是8201
+        - http://client-config.com:8201/config
+      - 假如目前是profile:test
+        - test默认在GitHub上对应的端口是8202
+        - http://client-config.com:8202/config
+    - 可以试试修改bootstrap里面profile的值，然后热部署项目试试；
+
+12. 成功实现了客户端3355访问SpringCloud Config3344通过GitHub获取配置信息
 
 
 
