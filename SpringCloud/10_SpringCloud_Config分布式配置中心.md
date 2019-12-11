@@ -471,7 +471,361 @@ SpringCloud Config分为**服务端和客户端两部分**；
 
 ## SpringCloud Config配置实战
 
+目前的情况：
 
+1. Config服务端配置OK且测试通过，我们可以和Config以及GitHub进行配置修改并获得内容；
+2. 此时我们做一个Eureka以及一个Dept访问的微服务，将两个微服务的配置统一交给GitHub，实现统一配置分布式管理，完成多环境的变更；
+
+
+
+步骤：
+
+1. GitHub配置文件本地配置
+
+   - 在microservicecloud-config仓库下新建文件microservicecloud-config-eureka-client.yaml
+
+   - microservicecloud-config-eureka-client.yaml内容：
+
+     ```yaml
+     spring:
+         profiles:
+             active:
+                 - dev
+     ---
+     server:
+         port: 7001              # 注册中心占用7001端口，冒号后面必须要有空格
+     spring:
+         profiles: dev
+         application:
+             name: microservicecloud-config-eureka-client
+     eureka:
+         instance:
+             hostname: eureka7001.com
+         client:
+             register-with-eureka: false        # 当前的eureka-server 不注册自己到服务列表中去
+             fetch-registry: false               # 不通过eureka获取注册信息
+             service-url:
+                 defaultZone: http://eureka7001.com:7001/eureka/
+     ---
+     server:
+         port: 7001
+     spring:
+         profiles: test
+         application:
+             name: microservicecloud-config-eureka-client
+     eureka:
+         instance:
+             hostname: eureka7001.com
+         client:
+             register-with-eureka: false
+             fetch-registry: false
+             service-url:
+                 defaultZone: http://eureka7001.com:7001/eureka/
+     ```
+
+   - 在microservicecloud-config仓库下新建文件microservicecloud-config-dept-client.yaml
+
+   - microservicecloud-config-dept-client.yaml内容：
+
+     ```yaml
+     spring:
+         profiles:
+             active:
+                 - dev
+     ---
+     server:
+         port: 8001
+     spring:
+         profiles: dev
+         application:
+             name: microservicecloud-config-dept-client
+         datasourece:
+             type: com.alibaba.druid.pool.DruidDataSource
+             driver-class-name: org.gjt.mm.mysql.Driver
+             url: jdbc:mysql://120.25.120.125:12350/cloudDB01?useUnicode=true&characterEncoding=utf8        # 数据库名称
+             username: root
+             password: root
+             dbcp2:
+                 min-idle: 5
+                 initial-size: 5
+                 max-total: 5
+                 max-wait-millis: 200
+     mybatis:
+         config-location: classpath:mybatis/mybatis.cfg.xml
+         mapper-locations:
+             - classpath: mybatis/mapper/**/*.xml
+     eureka:
+         client:
+             service-url:
+                 defaultZone: http://eureka7001.com:7001/eureka/
+         instance:
+             instance-id: dept-8001.com
+             prefer-ip-address: true
+     info:
+         app.name: tomxwd-microservicecloud
+         company.name: www.tomxwd.top
+         build.artifactId: $project.artifactId$
+         bulid.version: $project.version$
+     ---
+     server:
+         port: 8001
+     spring:
+         profiles: test
+         application:
+             name: microservicecloud-config-dept-client
+         datasourece:
+             type: com.alibaba.druid.pool.DruidDataSource
+             driver-class-name: org.gjt.mm.mysql.Driver
+             url: jdbc:mysql://120.25.120.125:12350/cloudDB02?useUnicode=true&characterEncoding=utf8        # 数据库名称
+             username: root
+             password: root
+             dbcp2:
+                 min-idle: 5
+                 initial-size: 5
+                 max-total: 5
+                 max-wait-millis: 200
+     mybatis:
+         config-location: classpath:mybatis/mybatis.cfg.xml
+         mapper-locations:
+             - classpath: mybatis/mapper/**/*.xml
+     eureka:
+         client:
+             service-url:
+                 defaultZone: http://eureka7001.com:7001/eureka/
+         instance:
+             instance-id: dept-8001.com
+             prefer-ip-address: true
+     info:
+         app.name: tomxwd-microservicecloud
+         company.name: www.tomxwd.top
+         build.artifactId: $project.artifactId$
+         bulid.version: $project.version$
+     ```
+
+2. Config版本的Eureka服务端
+
+   - 新建工程microservicecloud-config-eureka-client-7001
+
+   - pom.xml
+
+     ```xml
+     <?xml version="1.0" encoding="UTF-8"?>
+     <project xmlns="http://maven.apache.org/POM/4.0.0"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         <parent>
+             <artifactId>microservicecloud</artifactId>
+             <groupId>top.tomxwd</groupId>
+             <version>1.0-SNAPSHOT</version>
+         </parent>
+         <modelVersion>4.0.0</modelVersion>
+     
+         <artifactId>microservicecloud-config-eureka-client-7001</artifactId>
+     
+         <dependencies>
+             <!-- config服务端依赖 -->
+             <dependency>
+                 <groupId>org.springframework.cloud</groupId>
+                 <artifactId>spring-cloud-starter-config</artifactId>
+             </dependency>
+             <!-- eureka-server服务端 -->
+             <dependency>
+                 <groupId>org.springframework.cloud</groupId>
+                 <artifactId>spring-cloud-starter-eureka-server</artifactId>
+             </dependency>
+             <!-- 热部署 -->
+             <dependency>
+                 <groupId>org.springframework</groupId>
+                 <artifactId>springloaded</artifactId>
+             </dependency>
+             <dependency>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-devtools</artifactId>
+             </dependency>
+         </dependencies>
+     
+     </project>
+     ```
+
+   - bootstrap.yaml
+
+     ```yaml
+     spring:
+       cloud:
+         config:
+           name: microservicecloud-config-eureka-client
+           profile: dev
+           label: master
+           uri: http://config-3344.com:3344
+     ```
+
+   - application.yaml
+
+     ```yaml
+     spring:
+       application:
+         name: microservicecloud-config-eureka-client
+     ```
+
+   - 主启动类Config_Git_EurekaServerApplication
+
+     ```java
+     @SpringBootApplication
+     @EnableEurekaServer
+     public class Config_Git_EurekaServerApplication {
+     
+         public static void main(String[] args) {
+             SpringApplication.run(Config_Git_EurekaServerApplication.class, args);
+         }
+     
+     }
+     ```
+
+   - 测试
+
+     - 启动microservicecloud-config-3344微服务，保证Config总配置是ok的
+       - http://config-3344.com:3344/microservice-config-eureka-client-dev.yaml
+     - 再启动microservicecloud-config-eureka-client-7001微服务
+       - http://eureka7001.com:7001
+
+3. Config版本的Dept微服务
+
+   - 参考之前的8001拷贝后新建工程microservicecloud-config-dept-client-8001
+
+   - pom.xml
+
+     ```xml
+     <?xml version="1.0" encoding="UTF-8"?>
+     <project xmlns="http://maven.apache.org/POM/4.0.0"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         <parent>
+             <artifactId>microservicecloud</artifactId>
+             <groupId>top.tomxwd</groupId>
+             <version>1.0-SNAPSHOT</version>
+         </parent>
+         <modelVersion>4.0.0</modelVersion>
+     
+         <artifactId>microservicecloud-config-dept-client-8001</artifactId>
+         <dependencies>
+             <dependency>
+                 <groupId>top.tomxwd</groupId>
+                 <artifactId>microservicecloud-api</artifactId>
+                 <version>${project.version}</version>
+             </dependency>
+             <dependency>
+                 <groupId>junit</groupId>
+                 <artifactId>junit</artifactId>
+             </dependency>
+             <dependency>
+                 <groupId>mysql</groupId>
+                 <artifactId>mysql-connector-java</artifactId>
+             </dependency>
+             <dependency>
+                 <groupId>com.alibaba</groupId>
+                 <artifactId>druid</artifactId>
+             </dependency>
+             <dependency>
+                 <groupId>ch.qos.logback</groupId>
+                 <artifactId>logback-core</artifactId>
+             </dependency>
+             <dependency>
+                 <groupId>org.mybatis.spring.boot</groupId>
+                 <artifactId>mybatis-spring-boot-starter</artifactId>
+             </dependency>
+             <!-- 内嵌jetty容器 -->
+             <dependency>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-starter-jetty</artifactId>
+             </dependency>
+             <dependency>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-starter-web</artifactId>
+             </dependency>
+             <dependency>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-starter-test</artifactId>
+             </dependency>
+             <!-- 热部署 -->
+             <dependency>
+                 <groupId>org.springframework</groupId>
+                 <artifactId>springloaded</artifactId>
+             </dependency>
+             <dependency>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-devtools</artifactId>
+             </dependency>
+             <!-- 将微服务provider注册进Eureka -->
+             <dependency>
+                 <groupId>org.springframework.cloud</groupId>
+                 <artifactId>spring-cloud-starter-eureka</artifactId>
+             </dependency>
+             <dependency>
+                 <groupId>org.springframework.cloud</groupId>
+                 <artifactId>spring-cloud-starter-config</artifactId>
+             </dependency>
+             <!-- actuator监控以及信息配置 -->
+             <dependency>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-starter-actuator</artifactId>
+             </dependency>
+             <!-- SpringCloud-config配置 -->
+             <dependency>
+                 <groupId>org.springframework.cloud</groupId>
+                 <artifactId>spring-cloud-starter-config</artifactId>
+             </dependency>
+         </dependencies>
+     </project>
+     ```
+
+   - bootstrap.yaml
+
+     ```yaml
+     spring:
+       cloud:
+         config:
+           name: microservicecloud-config-dept-client
+           profile: dev
+           label: master
+           uri: http://config-3344.com:3344
+     ```
+
+   - application.yaml
+
+     ```yaml
+     spring:
+       application:
+         name: microservicecloud-config-dept-client
+     ```
+
+   - 主启动类Config_Git_DeptProvider8001_App
+
+     ```java
+     @SpringBootApplication
+     // 本服务启动后会自动注册进Eureka服务中
+     @EnableEurekaClient
+     // 服务发现
+     @EnableDiscoveryClient
+     public class Config_Git_DeptProvider8001_App {
+     
+         public static void main(String[] args) {
+             SpringApplication.run(Config_Git_DeptProvider8001_App.class,args);
+         }
+     
+     }
+     ```
+
+   - 配置说明
+
+     bootstrap.yaml里面：
+
+     - 都是以spring.cloud.config开头，然后name指定的是github上读取的资源名称，不需要后缀，profile指定环境，label表示分支名，uri表示Config的地址
+
+   - 测试
+
+     - 访问http://localhost:8001/dept/list，查看返回数据的数据库信息是哪个
+     - 切换另一个配置，再次查看结果
+     - **直接修改github上的配置（如把test环境的数据库切换为3）**，再次进行刷新
 
 
 
