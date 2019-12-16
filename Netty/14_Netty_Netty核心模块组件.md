@@ -170,4 +170,101 @@ ChannelPipeline是一个重点：
 
    - public NioEventLoopGroup()：构造方法
    - public Future<?> shutdownGracefully()：断开连接，关闭线程
-   - 
+
+
+
+## Unpooled类
+
+1. Netty提供了一个专门用来操作缓冲区（即Netty的数据容器）的工具类；
+
+   ```java
+   +-------------------+------------------+------------------+
+   | discardable bytes |  readable bytes  |  writable bytes  |
+   |                   |     (CONTENT)    |                  |
+   +-------------------+------------------+------------------+
+   |                   |                  |                  |
+   0      <=      readerIndex   <=   writerIndex    <=    capacity
+   ```
+
+2. 常用方法如下：
+
+   - public static ByteBuf copiedBuffer(CharSequence string,Charset charset)：通过给定的数据和字符编码返回一个ByteBuf对象（类似于NIO中的ByteBuffer但有区别）
+
+3. 举例说明Unpooled获取Netty的数据容器ByteBuf的基本使用：
+
+   ```java
+   public class NettyByteBuf01 {
+   
+       public static void main(String[] args) {
+           // 创建一个ByteBuf
+           /**
+            * 1. 创建一个对象，该对象包含一个数组arr，是一个byte[10]
+            * 2. 在netty的Buffer中，不需要使用flip进行反转就可以读取
+            *      因为底层维护了readerIndex以及writerIndex
+            * 3. 通过readerIndex writerIndex capactiy将buffer分为三部分
+            *                0====readerIndex    已经读取的区域
+            *      readerIndex====writerIndex    可读区域
+            *      writerIndex====capacity       可写区域
+            */
+           ByteBuf buffer = Unpooled.buffer(10);
+           for (int i = 0; i < 10; i++) {
+               buffer.writeByte(i);
+           }
+           // 总容量
+           System.out.println("buffer.capacity() = " + buffer.capacity());
+           // 输出
+           for (int i = 0; i < buffer.capacity(); i++) {
+               // 这里用的是随机读取，因此readIndex不会变化
+               System.out.println("buffer.getByte(i) = " + buffer.getByte(i));
+           }
+           for (int i = 0; i < buffer.capacity(); i++) {
+               // 这里readByte才会导致readIndex增加
+               System.out.println("buffer.readByte() = " + buffer.readByte());
+           }
+       }
+   
+   }
+   ```
+
+   ​	
+
+   ```java
+   public class NettyByteBuf02 {
+   
+       public static void main(String[] args) {
+           // 创建ByteBuf
+           ByteBuf byteBuf = Unpooled.copiedBuffer("hello,北京", CharsetUtil.UTF_8);
+           // 使用相关的API
+           if(byteBuf.hasArray()){//true
+               byte[] content = byteBuf.array();
+               // 将content转为字符串
+               System.out.println("new String(content,CharsetUtil.UTF_8) = " + new String(content, CharsetUtil.UTF_8));
+               System.out.println("byteBuf = " + byteBuf);
+               // 数组偏移量
+               System.out.println("byteBuf.arrayOffset() = " + byteBuf.arrayOffset());
+               System.out.println("byteBuf.readerIndex() = " + byteBuf.readerIndex());
+               System.out.println("byteBuf.writerIndex() = " + byteBuf.writerIndex());
+               System.out.println("byteBuf.capacity() = " + byteBuf.capacity());
+               // 读取一个字节 getByte不会影响readerIndex，所以用readByte
+               byteBuf.readByte();
+               // 可读取的字节数量
+               System.out.println("byteBuf.readableBytes() = " + byteBuf.readableBytes());
+               // 使用for取出各个字节
+               for (int i = 0; i < byteBuf.readableBytes(); i++) {
+                   System.out.println((char)byteBuf.getByte(i));
+               }
+               // 指定开始位置以及读取长度 读取
+               System.out.println("byteBuf.getCharSequence(1,4, Charset.forName(\"utf-8\")) = " + byteBuf.getCharSequence(1, 4, Charset.forName("utf-8")));
+   
+           }
+       }
+   
+   }
+   ```
+
+
+
+
+
+
+
