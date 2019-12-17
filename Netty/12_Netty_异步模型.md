@@ -1,4 +1,5 @@
 ---
+
 title: 12_Netty_异步模型
 date: 2019-12-15 09:56:01
 tags: 
@@ -24,14 +25,15 @@ categories:
 
 
 
-## 工作原理![工作原理示意图](12_Netty_%E5%BC%82%E6%AD%A5%E6%A8%A1%E5%9E%8B/image-20191215101118632.png)
+## 工作原理
+![工作原理示意图](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/12%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E7%A4%BA%E6%84%8F%E5%9B%BE.png)
 
 **说明：**
 
 1. 在使用Netty进行编程的时候，拦截操作和转换出入栈数据只需要你提供callback或利用future即可。这使得**链式操作**简单、高效、并有利于编程可重用的、通用的代码；
 2. Netty框架的目标就是让你的业务逻辑从网络基础应用编码中分离出来、解脱出来；
 
-![链式操作示意图](12_Netty_%E5%BC%82%E6%AD%A5%E6%A8%A1%E5%9E%8B/image-20191215102434379.png)
+![链式操作示意图](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/12%E9%93%BE%E5%BC%8F%E6%93%8D%E4%BD%9C%E7%A4%BA%E6%84%8F%E5%9B%BE.png)
 
 
 

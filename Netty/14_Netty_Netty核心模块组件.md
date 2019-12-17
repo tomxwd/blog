@@ -73,9 +73,9 @@ categories:
 
 2. ChannelHandler本身并没有提供很多方法，因为这个接口有许多的方法需要实现，使用期间，可以继承它的子类；
 
-3. ChannelHandler机器实现类一览图：
+3. ChannelHandler及其实现类一览图：
 
-   ![image-20191215153416101](14_Netty_Netty%E6%A0%B8%E5%BF%83%E6%A8%A1%E5%9D%97%E7%BB%84%E4%BB%B6/image-20191215153416101.png)
+   ![ChannelHandler及其实现类一览图](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/14ChannelHandler%E5%8F%8A%E5%85%B6%E5%AE%9E%E7%8E%B0%E7%B1%BB%E4%B8%80%E8%A7%88%E5%9B%BE.png)
 
    - ChannelInboundHandler用于处理入站I/O事件；
    - ChannelOutboundHandler用于处理出站I/O操作；
@@ -109,7 +109,7 @@ ChannelPipeline是一个重点：
 
 3. 在Netty中每个Channel都有且仅有一个ChannelPipeline与之对应，它们的组成关系如下：
 
-   ![image-20191215155618328](14_Netty_Netty%E6%A0%B8%E5%BF%83%E6%A8%A1%E5%9D%97%E7%BB%84%E4%BB%B6/image-20191215155618328.png)
+   ![channel与ChannelPipeline以及ChannelHandler关系](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/14channel%E4%B8%8EChannelPipeline%E4%BB%A5%E5%8F%8AChannelHandler%E5%85%B3%E7%B3%BB.png)
 
    - 一个Channel包含了一个ChannelPipeline，而ChannelPipeline中又维护了一个由ChannelHandlerContext组成的双向链表，并且每个ChannelHandlerContext中又关联着一个ChannelHandler。
    - 入站事件和出站事件在一个双向链表中，入站事件会从链表head往后传递到最后一个入站的handler。出站事件会从链表tail往前传递到最前一个出站的handler，两种类型的handler互不干扰；
@@ -161,7 +161,7 @@ ChannelPipeline是一个重点：
 
 3. 通常一个服务端口即一个ServerSocketChannel对应一个Selector和一个EventLoop线程。BossEventLoop负责接收客户端的连接并将SocketChannel交给WorkerEventLoopGroup来进行IO处理；
 
-   ![image-20191215190543392](14_Netty_Netty%E6%A0%B8%E5%BF%83%E6%A8%A1%E5%9D%97%E7%BB%84%E4%BB%B6/image-20191215190543392.png)
+   ![EventLoopGroup](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/14EventLoopGroup.png)
 
    - BossEventLoopGroup通常是一个单线程的EventLoop，EventLoop维护着一个注册了ServerSocketChannel的Selector实例，BossEventLoop不断轮询Selector，将连接事件分离出来；通常是OP_ACCEPT事件，然后将接收到的SocketChannel交给WorkerEventLoopGroup；
    - WorkerEventLoopGroup会由next选择其中一个EventLoop来将这个SocketChannel注册到其维护的Selector并对其后续的IO事件进行处理；

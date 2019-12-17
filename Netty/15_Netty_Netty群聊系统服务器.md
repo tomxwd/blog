@@ -272,5 +272,9 @@ public class GroupChatClientHandler extends SimpleChannelInboundHandler<String> 
 
 
 
+## 扩展（私聊功能思路）
 
+1. 首先使用HashMap管理，key为用户id，value为用户的channel；
+2. 私聊的时候先指定用户id，然后再发送消息；
+3. 服务器接收到消息，再将消息转发给对应用户的对应channel即可实现私聊功能；
 

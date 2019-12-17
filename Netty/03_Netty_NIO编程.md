@@ -322,7 +322,7 @@ public abstract class ByteBuffer
 
 基本介绍：
 
-![image-20191130125303614](03_Netty_NIO%E7%BC%96%E7%A8%8B/image-20191130125303614.png)
+![Channel与Buffer](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/03Channel%E4%B8%8EBuffer.png)
 
 1. NIO的通道类似于流，但是有如下区别
 
@@ -336,7 +336,7 @@ public abstract class ByteBuffer
 
    `public interface Channel extends Closeable {}`
 
-   ![image-20191130130314192](03_Netty_NIO%E7%BC%96%E7%A8%8B/image-20191130130314192.png)
+   ![Channel类继承关系图](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/03Channel%E7%B1%BB%E7%BB%A7%E6%89%BF%E5%85%B3%E7%B3%BB%E5%9B%BE.png)
 
    
 
@@ -352,7 +352,7 @@ public abstract class ByteBuffer
 
 FileChannel主要用来对本地文件进行IO操作，常见的方法：
 
-![image-20191130171922648](03_Netty_NIO%E7%BC%96%E7%A8%8B/image-20191130171922648.png)
+![FileChannel](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/03FileChannel.png)
 
 1. public int read(ByteBuffer dst)，从通道读取数据并放入到缓冲区中；
 2. pulbic int write(ByteBuffer src)，把缓冲区的数据写入到通道中；
@@ -643,7 +643,7 @@ public class NIOFileChannel04 {
 
 Selector类是一个抽象类
 
-![image-20191130212830869](03_Netty_NIO%E7%BC%96%E7%A8%8B/image-20191130212830869.png)
+![Selector类](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/03Selector%E7%B1%BB.png)
 
 - public static Selector open()：得到一个选择器对象
 - public int select(long timeout)：监控所有注册的通道，当其中有IO操作可以进行的时候，将对应的SelectorKey加入到内部集合中并返回，参数用来设置超时时间
@@ -669,7 +669,7 @@ Selector类是一个抽象类
 
 NIO非阻塞网络编程相关（Selector、SelectionKey、ServerSocketChannel和SocketChannel）关系梳理图：
 
-![image-20191130220621495](03_Netty_NIO%E7%BC%96%E7%A8%8B/image-20191130220621495.png)
+![NIO非阻塞编程原理分析图](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/03NIO%E9%9D%9E%E9%98%BB%E5%A1%9E%E7%BC%96%E7%A8%8B%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90%E5%9B%BE.png)
 
 说明：
 

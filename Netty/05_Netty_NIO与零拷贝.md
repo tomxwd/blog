@@ -1,10 +1,11 @@
+---
 title: 05_Netty_NIO与零拷贝
 date: 2019-12-01 20:31:34
 tags: 
-
  - Netty
 categories:
  - Netty
+---
 
 # 05_Netty_NIO与零拷贝
 
@@ -31,7 +32,7 @@ Socket socket = new ServerSocket(8080).accept();
 socket.getOutputStream().write(arr);
 ```
 
-  ![技术图片](05_Netty_NIO%E4%B8%8E%E9%9B%B6%E6%8B%B7%E8%B4%9D/20191201002705127362.png) 
+  ![传统IO](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/05%E4%BC%A0%E7%BB%9FIO.png)
 
 **DMA copy：direct memory access，直接内存拷贝，不使用CPU**
 
@@ -56,9 +57,7 @@ socket.getOutputStream().write(arr);
 
 mmap通过内存映射，将文件映射到内核缓冲区，同时，用户空间可以共享内核空间的数据。这样，在进行网络传输的时候，就可以减少内核空间到用户空间的拷贝次数；
 
- ![img](05_Netty_NIO%E4%B8%8E%E9%9B%B6%E6%8B%B7%E8%B4%9D/u=2475523914,31771240&fm=11&gp=0.jpg) 
-
-
+ ![mmap优化](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/05mmap%E4%BC%98%E5%8C%96.jpg)
 
 拷贝次数减少为三次，但是状态的切换还是三次；
 
@@ -79,7 +78,7 @@ Linux2.1版本提供了sendFile函数，其基本原理如下：
 
 **数据根本不经过用户态，直接从内核缓冲区进入到SocketBuffer，同时，由于和用户态完全无关，就减少了一次上下文切换**；
 
-![image-20191201205500174](05_Netty_NIO%E4%B8%8E%E9%9B%B6%E6%8B%B7%E8%B4%9D/image-20191201205500174.png)
+![Linux2.1SendFile优化](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/05Linux2.1SendFile%E4%BC%98%E5%8C%96.png)
 
 还是三次拷贝，但是减少为两次切换
 
@@ -95,9 +94,7 @@ Linux2.1版本提供了sendFile函数，其基本原理如下：
 
 Linux在2.4版本中，做了一些修改，避免了从内核缓冲区拷贝到socket buffer的操作，直接拷贝到协议栈，从而再一次减少了数据拷贝；
 
-
-
-![img](05_Netty_NIO%E4%B8%8E%E9%9B%B6%E6%8B%B7%E8%B4%9D/u=603487071,3301636634&fm=11&gp=0.jpg)
+![Linux2.4SendFile优化](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/05Linux2.4SendFile%E4%BC%98%E5%8C%96.jpg)
 
 两次拷贝：
 

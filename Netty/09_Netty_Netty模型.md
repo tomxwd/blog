@@ -13,7 +13,7 @@ categories:
 
 Netty主要基于主从Reactors多线程模型做出了一定的改进，其中主从Reactor多线程模型有多个Reactor；
 
-![image-20191214121137665](09_Netty_Netty%E6%A8%A1%E5%9E%8B/image-20191214121137665.png)
+![Netty模型通俗版](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/09Netty%E6%A8%A1%E5%9E%8B%E9%80%9A%E4%BF%97%E7%89%88.png)
 
 1. BossGroup线程维护Selector，只关注accept事件；
 2. 接收到accept事件后，获取到对应的SocketChannel，进一步封装成NIOSocketChannel，并注册到WorkerGroup线程（事件循环），并进行维护；
@@ -23,13 +23,13 @@ Netty主要基于主从Reactors多线程模型做出了一定的改进，其中�
 
 ## 进阶版
 
-![image-20191214172249035](09_Netty_Netty%E6%A8%A1%E5%9E%8B/image-20191214172249035.png)
+![Netty模型进阶版](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/09Netty%E6%A8%A1%E5%9E%8B%E8%BF%9B%E9%98%B6%E7%89%88.png)
 
 
 
 ## 详细版
 
- ![img](09_Netty_Netty%E6%A8%A1%E5%9E%8B/timg.jfif) 
+ ![Netty模型详细版](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/09Netty%E6%A8%A1%E5%9E%8B%E8%AF%A6%E7%BB%86%E7%89%88.jfif)
 
 1. Netty抽象出两组线程池，BossGroup专门负责客户端的连接，WorkGroup专门负责网络的读写；
 2. BossGroup和WorkGroup类型都是NioEventLoopGroup；

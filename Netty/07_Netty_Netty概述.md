@@ -27,7 +27,7 @@ for rapid development of maintainable high performance protocol servers & client
 
 Netty是一个异步的基于事件驱动的网络应用框架，为了快速开发服务器端和客户端；
 
- ![img](07_Netty_Netty%E6%A6%82%E8%BF%B0/components.png) 
+ ![netty官网组件介绍](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/07netty%E5%AE%98%E7%BD%91%E7%BB%84%E4%BB%B6%E4%BB%8B%E7%BB%8D.png)
 
 1. Netty是由JBOSS提供的一个Java开源框架。
 2. Netty提供异步的、基于事件驱动是网络应用程序框架，用以快速开发高性能、高可靠性的网络IO程序；

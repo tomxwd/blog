@@ -25,7 +25,7 @@ categories:
 
 ### 传统阻塞I/O服务模型
 
-![传统阻塞I/O服务模型工作原理图](08_Netty_Netty%E9%AB%98%E6%80%A7%E8%83%BD%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/image-20191202212251818.png)
+![传统阻塞IO服务模型工作原理图](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/08%E4%BC%A0%E7%BB%9F%E9%98%BB%E5%A1%9EIO%E6%9C%8D%E5%8A%A1%E6%A8%A1%E5%9E%8B%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E5%9B%BE.png)
 
 黄色的框表示对象，蓝色的框代表线程，白色的框标识方法（API）；
 
@@ -54,7 +54,7 @@ Reactor对应的叫法：
 1. **基于I/O复用模型**：多个连接公用一个阻塞对象，应用程序只需要在一个阻塞对象等待，无需阻塞等待所有连接。当某个连接有新的数据可以处理的时候，操作系统通知应用程序，线程从阻塞状态返回，开始进行业务处理；
 2. **基于线程池复用线程资源：**不必再为每个连接创建线程，将连接完成后的业务处理任务分配给线程进行处理，一个线程可以处理多个连接的业务；
 
-![image-20191202213608323](08_Netty_Netty%E9%AB%98%E6%80%A7%E8%83%BD%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/image-20191202213608323.png)
+![Reactor模式](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/08Reactor%E6%A8%A1%E5%BC%8F.png)
 
 整体设计理念（可能有不同的实现，有些许区别，但大体一致）：
 
@@ -83,7 +83,7 @@ Reactor对应的叫法：
 
 ##### 单Reactor单线程
 
-![image-20191203200125252](08_Netty_Netty%E9%AB%98%E6%80%A7%E8%83%BD%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/image-20191203200125252.png)
+![单Reactor单线程](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/08%E5%8D%95Reactor%E5%8D%95%E7%BA%BF%E7%A8%8B.png)
 
 方案说明：
 
@@ -109,7 +109,7 @@ Reactor对应的叫法：
 
 ##### 单Reactor多线程
 
-![image-20191203201536533](08_Netty_Netty%E9%AB%98%E6%80%A7%E8%83%BD%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/image-20191203201536533.png)
+![单Reactor多线程](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/08%E5%8D%95Reactor%E5%A4%9A%E7%BA%BF%E7%A8%8B.png)
 
 方案说明：
 
@@ -129,7 +129,7 @@ Reactor对应的叫法：
 
 ##### 主从Reactor多线程
 
-![image-20191203202713479](08_Netty_Netty%E9%AB%98%E6%80%A7%E8%83%BD%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/image-20191203202713479.png)
+![主从Reactor多线程](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/08%E4%B8%BB%E4%BB%8EReactor%E5%A4%9A%E7%BA%BF%E7%A8%8B.png)
 
 方案说明：
 
@@ -146,9 +146,7 @@ Reactor对应的叫法：
 
 Scalable IO in Java对Multiple Reactors的原理图解：
 
-![image-20191203204230000](08_Netty_Netty%E9%AB%98%E6%80%A7%E8%83%BD%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/image-20191203204230000.png)
-
-
+![ScalableIOinJava](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/Netty/08ScalableIOinJava.png)
 
 方案优缺点说明：
 
