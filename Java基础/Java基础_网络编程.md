@@ -245,6 +245,81 @@ public class TcpServerDemo01 {
 
 
 
+## TCP文件上传
+
+服务器端：
+
+```java
+public class TcpServerDemo02 {
+    public static void main(String[] args) throws IOException {
+        // 创建服务
+        ServerSocket serverSocket = new ServerSocket(9999);
+        // 监听
+        Socket accept = serverSocket.accept();
+        // 获取输入流
+        InputStream is = accept.getInputStream();
+        // 文件输出
+        FileOutputStream fos = new FileOutputStream(new File("pic2.png"));
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = is.read(buffer)) != -1) {
+            fos.write(buffer, 0, len);
+        }
+        // 通知客户端文件接收完毕
+        OutputStream os = accept.getOutputStream();
+        os.write("我接收完毕了，可以断开".getBytes(Charset.forName("utf-8")));
+        // 关闭资源
+        fos.close();
+        is.close();
+        accept.close();
+        serverSocket.close();
+
+    }
+}
+```
+
+客户端：
+
+```java
+public class TcpClientDemo02 {
+
+    public static void main(String[] args) throws IOException {
+        // 创建一个socket连接
+        Socket socket = new Socket("localhost", 9999);
+        // 创建输出流
+        OutputStream os = socket.getOutputStream();
+        // 文件流
+        FileInputStream fis = new FileInputStream(new File("pic.png"));
+        // 写出文件
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = fis.read(buffer)) != -1) {
+            os.write(buffer, 0, len);
+        }
+        // 通知服务器已经输出完毕
+        socket.shutdownOutput();
+        // 确定服务器接收完毕才可以连接
+        InputStream is = socket.getInputStream();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer2 = new byte[1024];
+        int len2;
+        while ((len2 = is.read(buffer2)) != -1) {
+            baos.write(buffer2, 0, len2);
+        }
+        System.out.println(baos.toString());
+        // 关闭资源
+        baos.close();
+        is.close();
+        fis.close();
+        os.close();
+        socket.close();
+    }
+
+}
+```
+
+
+
 
 
 

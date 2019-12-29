@@ -179,7 +179,223 @@ public class MyServerInitializer extends ChannelInitializer<SocketChannel> {
 
 1. 要求客户端发送5个Message对象，客户端每次发送一个Message对象；
 2. 服务器每次接收一个Message，分5次解码，每读到一个Message，就会回复一个Message对象给客户端；
-3. 
+
+
+
+代码：
+
+协议：
+
+```java
+public class MessageProtocol {
+
+    private int len;
+    private byte[] content;
+
+    public MessageProtocol() {
+    }
+
+    public int getLen() {
+        return len;
+    }
+
+    public void setLen(int len) {
+        this.len = len;
+    }
+
+    public byte[] getContent() {
+        return content;
+    }
+
+    public void setContent(byte[] content) {
+        this.content = content;
+    }
+}
+```
+
+编解码器：
+
+```java
+public class MyMessageEncode extends MessageToByteEncoder<MessageProtocol> {
+    @Override
+    protected void encode(ChannelHandlerContext ctx, MessageProtocol msg, ByteBuf out) throws Exception {
+        System.out.println("MyMessageEncode.encode编码器调用");
+        out.writeInt(msg.getLen());
+        out.writeBytes(msg.getContent());
+    }
+}
+```
+
+```java
+public class MyMessageDecode extends ReplayingDecoder<Void> {
+    @Override
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        System.out.println("MyMessageDecode.decode解码调用");
+        // 字节码->MessageProtocol
+        int len = in.readInt();
+        byte[] content = new byte[len];
+        in.readBytes(content);
+        // 封装成MessageProtocol对象，放入out传递给下一个handler处理
+        MessageProtocol messageProtocol = new MessageProtocol();
+        messageProtocol.setLen(len);
+        messageProtocol.setContent(content);
+        out.add(messageProtocol);
+    }
+}
+```
+
+服务器端：
+
+```java
+public class MyServer {
+
+    public static void main(String[] args) {
+        NioEventLoopGroup bossGroup = new NioEventLoopGroup(1);
+        NioEventLoopGroup workerGroup = new NioEventLoopGroup(8);
+        try {
+            ServerBootstrap serverBootstrap = new ServerBootstrap();
+            serverBootstrap.group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new MyServerInitializer());
+            ChannelFuture channelFuture = serverBootstrap.bind(7000).sync();
+            channelFuture.channel().closeFuture().sync();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            bossGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
+        }
+
+
+    }
+
+}
+```
+
+```java
+public class MyServerInitializer extends ChannelInitializer<SocketChannel> {
+    @Override
+    protected void initChannel(SocketChannel ch) throws Exception {
+        ch.pipeline()
+                // 解码器
+                .addLast(new MyMessageDecode())
+                // 编码器
+                .addLast(new MyMessageEncode())
+                .addLast(new MyServerHandler());
+    }
+}
+```
+
+```java
+public class MyServerHandler extends SimpleChannelInboundHandler<MessageProtocol> {
+
+    private AtomicInteger count = new AtomicInteger(0);
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
+        ctx.close();
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, MessageProtocol msg) throws Exception {
+        // 接收到解码器解码后的数据并处理
+        int len = msg.getLen();
+        byte[] content = msg.getContent();
+        System.out.println("服务端接收到信息如下：");
+        System.out.println("长度=" + len);
+        System.out.println("内容=" + new String(content, CharsetUtil.UTF_8));
+        System.out.println("服务器接收到消息包数量=" + count.incrementAndGet());
+
+        // 回复消息
+        byte[] responseContent = UUID.randomUUID().toString().getBytes("utf-8");
+        int responseLen = responseContent.length;
+        // 构建一个协议包
+        MessageProtocol messageProtocol = new MessageProtocol();
+        messageProtocol.setContent(responseContent);
+        messageProtocol.setLen(responseLen);
+        ctx.writeAndFlush(messageProtocol);
+    }
+}
+```
+
+客户端：
+
+```java
+public class MyClient {
+
+    public static void main(String[] args) {
+        NioEventLoopGroup group = new NioEventLoopGroup(1);
+        try {
+            Bootstrap bootstrap = new Bootstrap();
+            bootstrap.group(group)
+                    .channel(NioSocketChannel.class)
+                    .handler(new MyClientInitializer());
+            ChannelFuture channelFuture = bootstrap.connect("localhost", 7000).sync();
+            channelFuture.channel().closeFuture().sync();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            group.shutdownGracefully();
+        }
+
+    }
+
+}
+```
+
+```java
+public class MyClientInitializer extends ChannelInitializer<SocketChannel> {
+    @Override
+    protected void initChannel(SocketChannel ch) throws Exception {
+        ch.pipeline()
+                .addLast(new MyMessageEncode())
+                .addLast(new MyMessageDecode())
+                .addLast(new MyClientHandler());
+    }
+}
+```
+
+```java
+public class MyClientHandler extends SimpleChannelInboundHandler<MessageProtocol> {
+
+    private AtomicInteger count = new AtomicInteger(0);
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, MessageProtocol msg) throws Exception {
+        int len = msg.getLen();
+        String content = new String(msg.getContent(), CharsetUtil.UTF_8);
+        System.out.println("客户端接收到消息如下：");
+        System.out.println("消息长度：" + len);
+        System.out.println("消息内容：" + content);
+        System.out.println("客户端接收消息数量：" + count.incrementAndGet());
+
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
+        ctx.close();
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        // 使用客户端发送10条 "天气冷，吃火锅" 数据
+        for (int i = 0; i < 5; i++) {
+            String msg = "天气冷，吃火锅";
+            byte[] content = msg.getBytes(CharsetUtil.UTF_8);
+            int length = content.length;
+            // 创建协议包对象
+            MessageProtocol messageProtocol = new MessageProtocol();
+            messageProtocol.setContent(content);
+            messageProtocol.setLen(length);
+            ctx.writeAndFlush(messageProtocol);
+        }
+    }
+}
+```
+
+
 
 
 
