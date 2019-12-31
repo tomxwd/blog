@@ -238,20 +238,405 @@ where 筛选条件;
    in 
 
    is null
+   
+4. 安全等于：<=>可以判断null值也可以判断普通数值
 
 **测试：**
 
 ```sql
+# 条件查询
+# 一、按条件表达式筛选
+# 案例1：查询工资>12000的员工信息
+select *
+from employees
+where salary > 12000;
 
+# 案例2：查询部门编号不等于90号的员工名和部门编号 可以用<>或者!=
+select last_name, department_id
+from employees
+where department_id <> 90;
+
+# 二、按逻辑表达式筛选
+# 案例1：查询工资在10000到20000之间的员工名、工资及奖金
+select last_name, salary, commission_pct
+from employees
+where salary >= 10000
+  and salary <= 20000;
+
+# 案例2：查询部门编号不是在90到110之间，或者工资高于15000的员工信息
+select *
+from employees
+where department_id < 90
+   OR department_id > 110
+   OR salary > 15000;
+
+select *
+from employees
+where NOT (department_id >= 90 AND department_id <= 110)
+   OR salary > 15000;
+
+# 三、模糊查询
+/*
+    like:
+    通配符：
+        %：任意多个字符
+        _：任意单个字符
+
+ */
+# 案例1：查询员工名中包含字符a的员工信息
+select *
+from employees
+where last_name like '%a%';
+
+# 案例2：查询员工名中第三个字符为n，第五个字符为l的员工名和工资
+select last_name, salary
+from employees
+where last_name like '__n_l%';
+
+# 案例3：查询员工名中第二个字符为_的员工名（转义字符）
+# 方式1：默认\转义
+select last_name
+from employees
+where last_name like '_\_%';
+# 方式2：指定转义字符$
+select last_name
+from employees
+where last_name like '_$_%' escape '$';
+
+/*
+     between and
+     ①：使用between and 可以提高语句的简洁度
+     ②：包含临界值
+     ③：两个临界值不要调换顺序
+ */
+# 案例1：查询员工编号在100到120之间的员工信息
+select *
+from employees
+where employee_id >= 100
+  AND employee_id <= 120;
+
+select *
+from employees
+where employee_id between 100 AND 120;
+
+/*
+    in
+    用于判断某字段的值是否属于in列表中的某一项
+    ①：使用in提高语句简洁度
+    ②：in列表的值类型必须统一或兼容
+    ③：
+ */
+# 案例：查询员工的工种编号是 IT_PROG、AD_VP、AD_PRES中的一个的员工名和工种编号
+select last_name, job_id
+from employees
+where job_id in ('IT_PROG', 'AD_VP', 'AD_PRES');
+
+/*
+    is null / is not null
+    = 或者 <> 不能用于判断null值
+ */
+# 案例1：查询没有奖金的员工名和奖金率
+select last_name, commission_pct
+from employees
+where commission_pct is NULL;
+
+/*
+    安全等于    <=> 可以判断null值
+ */
+# 案例1：查询没有奖金的员工名和奖金率
+select last_name, commission_pct
+from employees
+where commission_pct <=> null;
+# 案例2：查询工资为12000的员工信息
+select last_name, salary
+from employees
+where salary <=> 12000;
+
+# 综合案例：
+# 1. 查询工资大于12000的员工姓名和工资
+select last_name, salary
+from employees emp
+where emp.salary > 12000;
+# 2. 查询员工号为176的员工的姓名和部门号以及年薪
+select last_name, department_id, salary * 12 * (1 + IFNULL(commission_pct, 0)) 年薪
+from employees emp
+where emp.employee_id = 176;
+# 3. 选择工资不在5000到12000的员工的姓名和工资
+select emp.last_name, emp.salary
+from employees emp
+where emp.salary not between 5000 and 12000;
+# 4. 选择在20或50号部门工作的员工姓名和部门号
+select emp.last_name, emp.department_id
+from employees emp
+where emp.employee_id between 20 and 50;
+# 5. 选择公司中没有管理者的员工姓名及job_id
+select emp.last_name, emp.job_id
+from employees emp
+where emp.manager_id is null;
+# 6. 选择公司中有奖金的员工姓名、工资和奖金级别
+select emp.last_name, emp.salary, emp.commission_pct
+from employees emp
+where emp.commission_pct is not null;
+# 7. 选择员工姓名的第三个字母是a的员工姓名
+select emp.last_name
+from employees emp
+where emp.last_name like '__a%';
+# 8. 选择姓名中有字母a和e的员工姓名
+select emp.last_name
+from employees emp
+where emp.last_name like '%a%'
+   OR emp.last_name like '%e%';
+# 9. 显示出表employee中first_name以'e'结尾的员工信息
+select first_name, last_name
+from employees
+where first_name like '%e';
+# 10. 显示出employee中部门编号在80-100之间的姓名和职位
+select emp.last_name, emp.job_id
+from employees emp
+where emp.department_id between 80 and 100;
+# 11. 显示出employee的manager_id是100,101,110的员工姓名、职位
+select emp.last_name, emp.job_id
+from employees emp
+where emp.manager_id in (100, 101, 110);
+```
+
+
+
+### 测试题
+
+```sql
+# 一、查询没有奖金，工资小于18000的salary、last_name
+select emp.salary, emp.last_name
+from employees emp
+where emp.commission_pct is null
+  AND emp.salary < 1800;
+# 二、 查询employees表中，job_id不为“IT”或者工资为12000的员工信息
+select emp.last_name,emp.job_id,emp.salary
+from employees emp
+where emp.job_id != 'IT' OR emp.salary = 12000;
+# 三、 查看部门departments表的结构
+desc departments;
+# 四、查询部门departments表中涉及到了哪些位置编号
+select distinct location_id
+from departments;
+/*
+ 五、 经典面试题：
+ 试问： select * from employees
+        和  select * from employees where commission_pct like '%%" and last_name like '%%';
+        结果是否一样？说明原因
+ */
+select *
+from employees;
+select *
+from employees where commission_pct like '%%' and last_name like '%%';
+# 答案是不一样，如果判断的值里有null值，则会不一样，如果都是or关键字就一样；
 ```
 
 
 
 ## 排序查询
 
+ **语法：**
+
+select 查询列表
+
+from 表
+
+【where 筛选条件】
+
+order by 排序列表 asc(升序**默认**)|desc(降序)
+
+**支持按表达式排序、按别名排序、按函数排序、多个字段排序**
+
+**测试：**
+
+```sql
+# 排序查询
+use myemployees;
+# 案例1：查询员工信息，要求工资从高到低排序
+select *
+from employees emp
+order by emp.salary desc;
+
+# 案例2：查询部门编号>=90的员工信息，按入职时间的先后进行排序【添加了筛选条件】
+select *
+from employees emp
+where emp.department_id >= 90
+order by hiredate asc;
+
+# 案例3：按年薪的高低显示员工的信息和年薪【按表达式排序】
+select emp.*, emp.salary * 12 * (1 + ifnull(emp.commission_pct, 0)) year_salary
+from employees emp
+order by emp.salary * 12 * (1 + ifnull(emp.commission_pct, 0)) desc;
+
+# 案例4：按年薪的高低显示员工的信息和年薪【按别名排序】
+select emp.*, emp.salary * 12 * (1 + ifnull(emp.commission_pct, 0)) year_salary
+from employees emp
+order by year_salary desc;
+
+# 案例5：按姓名的长度显示员工的姓名和工资【按函数排序】
+select length(last_name) 字节长度, last_name, salary
+from employees
+order by 字节长度 desc;
+
+# 案例6：查询员工信息，要求先按工资排序[升序]，再按员工编号排序[降序]【按多个字段排序】
+select *
+from employees
+order by salary, employee_id desc;
+```
+
+
+
+### 测试题
+
+```sql
+# 测试
+# 1. 查询员工的姓名和部门号以及年薪，按年薪降序、姓名升序
+select last_name, department_id, salary * 12 * (1 + ifnull(commission_pct, 0)) 年薪
+from employees
+order by 年薪 desc, last_name asc;
+# 2. 选择工资不再8000到17000的员工的姓名和工资，按工资降序
+select last_name, salary
+from employees e
+where e.salary not between 8000 and 17000
+order by salary desc;
+# 3. 查询邮箱中包含e的员工信息，并先按邮箱的字节数降序，再按部门号升序
+select *
+from employees e
+where e.email like '%e%'
+order by length(e.email) desc, e.department_id;
+```
+
 
 
 ## 常见函数
+
+**概念**：类似于java中的方法，将一组逻辑语句封装在方法体中，对外暴露方法名
+
+**好处：**
+
+1. 隐藏了实现细节
+2. 提高代码的重用性
+
+**调用：**select 函数名(实参列表)【from表】;
+
+**特点：**
+
+1. 叫什么（函数名）
+2. 干什么（函数功能）
+
+**分类：**
+
+1. 单行函数
+
+   concat、length、ifnull等
+
+2. 分组函数
+
+   主要用于统计使用，又称为统计函数、聚合函数、组函数
+
+
+
+### 字符函数
+
+#### length
+
+```sql
+# 1. length()：获取参数值的字节个数，utf-8一个中文3个字节
+select length('john');
+select length('张三丰hahaha');
+show variables like '%char%';
+```
+
+
+
+#### concat
+
+```sql
+# 2. concat 拼接字符串
+select concat(last_name, '_', first_name) 姓名
+from employees;
+```
+
+
+
+#### upper、lower
+
+```sql
+# 3. upper、lower 大小写转换
+select upper('john');
+select lower('JoHn');
+select concat(upper(last_name), lower(first_name)) 姓名
+from employees;
+```
+
+
+
+#### substr、substring
+
+```sql
+# 4. substr、substring 截取字符 4个重载，字符长度
+select substr('李莫愁爱上了陆展元', 7) out_put;
+select substr('李莫愁爱上了陆展元', 1, 3) out_put;
+# 案例：姓名中首字符大写，其他字符小写，然后用下划线_拼接显示出来
+select last_name, concat(upper(substr(last_name, 1, 1)), '_', lower(substr(last_name, 2))) 结果
+from employees;
+```
+
+
+
+#### instr
+
+```sql
+# 5. instr：返回子串第一次出现的位置，如果找不到就返回0
+select instr('杨不悔爱上了殷六侠', '殷六侠');
+```
+
+
+
+#### trim
+
+```sql
+# 6. trim：去前后空格
+select length(trim('       张翠山     ')), trim('       张翠山     ') as out_put;
+select trim('a' from 'aaaaaaaaaaaa张aaaaaaa翠山aaaaa') as out_put;
+```
+
+
+
+#### lpad、rpad
+
+```sql
+# 7. lpad：用指定的字符实现左填充指定长度，超过则截断
+select lpad('殷素素',10,'*') as out_put;
+# 8. rpad：用指定的字符实现左填充指定长度，超过则截断
+select rpad('殷素素',12,'ab') as out_put;
+```
+
+
+
+#### replace
+
+```sql
+# 9. replace 所有都会替换
+select replace('周芷若-张无忌爱上了周芷若','周芷若','赵敏') as out_put;
+```
+
+
+
+### 数学函数
+
+
+
+### 日期函数
+
+
+
+### 其他函数【补充】
+
+
+
+### 流程控制函数【补充】
 
 
 
