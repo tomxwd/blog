@@ -1014,9 +1014,407 @@ where department_id=90;
 
 比如查询每个部门的平均工资等操作，需要对部门进行分组；
 
+**语法：**
+
+select column,group_function(column)
+
+from table
+
+[where condition]
+
+[group by group_by_expression]
+
+[having condition]
+
+[order by column]
+
+**明确：WHERE条件一定要放在FROM后面**；
+
+**注意：**
+
+查询列表比较特殊，要求是分组函数或者group by后面出现的字段
+
+**特点：**
+
+1. 分组查询中的筛选条件分为两类（数据源不同）
+   - 分组前筛选（原始表）where，在from后面，group by前面
+   - 分组后筛选（分组后的结果集）having，在group by后面
+2. 分组函数做条件肯定是放在having子句中；
+3. 能用分组前筛选的，优先考虑使用分组前筛选，性能更好
+4. group by 子句支持单个字段分组、多个字段分组（多个字段之间用逗号隔开，没有顺序要求），表达式跟函数也支持（用的比较少）；
+5. 也可以添加排序，放在整个分组查询的最后；
+
+### 简单的分组查询
+
+```sql
+# 案例1：查询每个工种的最高工资
+select max(salary), job_id
+from employees
+group by job_id;
+
+# 案例2：查询每个位置上的部门个数
+select count(*), location_id
+from departments
+group by location_id;
+```
+
+
+### 添加分组前的筛选条件
+
+```sql
+# 案例1：查询邮箱中包含a字符的，每个部门的平均工资
+select department_id, avg(salary)
+from employees
+where email like '%a'
+group by department_id;
+
+# 案例2：查询有奖金的每个领导手下员工的最高工资
+select max(salary), manager_id
+from employees
+where commission_pct is not null
+group by manager_id;
+```
+
+### 添加分组后的筛选条件
+
+```sql
+# 案例1：查询哪个部门的员工个数>2
+# ①：查询每个部门的员工个数
+select department_id, count(*)
+from employees
+group by department_id;
+# ②：根据①得到的结果进行筛选，查询哪些部门的员工个数>2
+select department_id, count(*)
+from employees
+group by department_id
+having count(*) > 2;
+
+# 案例2：查询每个工种有奖金的员工，且最高工资>12000的工种编号和最高工资
+select job_id, max(salary)
+from employees
+where commission_pct is not null
+group by job_id
+having max(salary) > 12000;
+
+# 案例3：领导编号>102的每个领导手下的最低工资>5000的领导编号是哪个，以及其最低工资
+select manager_id, min(salary)
+from employees
+where manager_id > 102
+group by manager_id
+having min(salary) > 5000;
+```
+
+### 按表达式或函数分组
+
+```sql
+# 案例：按员工姓名的长度分组，查询每一组的员工个数，筛选员工个数>5的有哪些
+select length(last_name), count(*)
+from employees
+group by length(last_name)
+having count(*) > 5;
+```
+
+### 按多个字段分组
+
+```sql
+# 案例：查询每个部门每个工种的员工的平均工资
+select department_id, job_id, avg(salary)
+from employees
+group by department_id, job_id;
+```
+
+### 添加排序
+
+```sql
+## 案例：查询每个部门每个工种的员工的平均工资，部门不为null且平均工资高于10000，并且按平均工资的降序排序
+select department_id, job_id, avg(salary)
+from employees
+where department_id is not null
+group by department_id, job_id
+having avg(salary) > 10000
+order by avg(salary) desc;
+```
+
+### 综合测试
+
+```sql
+# 综合测试
+# 1. 查询各个job_id的员工工资的最大值、最小值、平均值、总和，并按job_id排序
+select job_id, max(salary), min(salary), avg(salary), sum(salary)
+from employees
+group by job_id
+order by job_id;
+# 2. 查询员工最高工资和最低工资的差距
+select max(salary) - min(salary)
+from employees;
+# 3. 查询各个管理者手下员工的最低工资，其中最低工资不能低于6000，没有管理者的员工不计算在内
+select manager_id, min(salary)
+from employees
+where manager_id is not null
+group by manager_id
+having min(salary) >= 6000;
+# 4. 查询所有部门的编号，员工数量和工资平均值，并按平均工资降序排序
+select department_id, count(*), avg(salary)
+from employees
+group by department_id;
+# 5. 选择各个job_id的员工人数
+select count(*),job_id
+from employees
+group by job_id;
+```
+
 
 
 ## 连接查询
+
+多表连接，当查询的字段来自多个表自然就要用到连接查询；
+
+先导入表：
+
+```sql
+/*
+SQLyog Ultimate v10.00 Beta1
+MySQL - 5.7.18-log : Database - girls
+*********************************************************************
+*/
+
+
+/*!40101 SET NAMES utf8 */;
+
+/*!40101 SET SQL_MODE=''*/;
+
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+CREATE DATABASE /*!32312 IF NOT EXISTS*/`girls` /*!40100 DEFAULT CHARACTER SET utf8 */;
+
+USE `girls`;
+
+/*Table structure for table `admin` */
+
+DROP TABLE IF EXISTS `admin`;
+
+CREATE TABLE `admin` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(10) NOT NULL,
+  `password` varchar(10) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+
+/*Data for the table `admin` */
+
+insert  into `admin`(`id`,`username`,`password`) values (1,'john','8888'),(2,'lyt','6666');
+
+/*Table structure for table `beauty` */
+
+DROP TABLE IF EXISTS `beauty`;
+
+CREATE TABLE `beauty` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `sex` char(1) DEFAULT '女',
+  `borndate` datetime DEFAULT '1987-01-01 00:00:00',
+  `phone` varchar(11) NOT NULL,
+  `photo` blob,
+  `boyfriend_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
+
+/*Data for the table `beauty` */
+
+insert  into `beauty`(`id`,`name`,`sex`,`borndate`,`phone`,`photo`,`boyfriend_id`) values (1,'柳岩','女','1988-02-03 00:00:00','18209876577',NULL,8),(2,'苍老师','女','1987-12-30 00:00:00','18219876577',NULL,9),(3,'Angelababy','女','1989-02-03 00:00:00','18209876567',NULL,3),(4,'热巴','女','1993-02-03 00:00:00','18209876579',NULL,2),(5,'周冬雨','女','1992-02-03 00:00:00','18209179577',NULL,9),(6,'周芷若','女','1988-02-03 00:00:00','18209876577',NULL,1),(7,'岳灵珊','女','1987-12-30 00:00:00','18219876577',NULL,9),(8,'小昭','女','1989-02-03 00:00:00','18209876567',NULL,1),(9,'双儿','女','1993-02-03 00:00:00','18209876579',NULL,9),(10,'王语嫣','女','1992-02-03 00:00:00','18209179577',NULL,4),(11,'夏雪','女','1993-02-03 00:00:00','18209876579',NULL,9),(12,'赵敏','女','1992-02-03 00:00:00','18209179577',NULL,1);
+
+/*Table structure for table `boys` */
+
+DROP TABLE IF EXISTS `boys`;
+
+CREATE TABLE `boys` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `boyName` varchar(20) DEFAULT NULL,
+  `userCP` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+
+/*Data for the table `boys` */
+
+insert  into `boys`(`id`,`boyName`,`userCP`) values (1,'张无忌',100),(2,'鹿晗',800),(3,'黄晓明',50),(4,'段誉',300);
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+```
+
+**分类：**
+
+- 按年代分类：
+  - sql92标准：mysql中仅支持内连接
+  - sql99标准【推荐】：mysql中支持内连接+外连接（左外和右外【Oracle支持全外连接】）+交叉连接
+- 按功能分类：
+  - 内连接
+    - 等值连接
+    - 非等值连接
+    - 自连接
+  - 外连接
+    - 左外连接
+    - 右外连接
+    - 全外连接
+  - 交叉连接
+
+
+
+### sql92标准
+
+**注意：92语法只支持内连接，所以在连接条件为null的时候，可能会得不到想要的结果**
+
+1. 多表等值连接的结果为多表的交集部分
+2. n表连接，至少需要n-1个连接条件
+3. 多表的顺序没有要求
+4. 一般需要为表起别名
+5. 可以搭配前面介绍的所有子句使用，如排序、分组、筛选
+
+#### 等值连接
+
+```sql
+# 1. 等值连接
+# 案例1：查询女神名和对应的男神名
+select beauty.name, boys.boyName
+from boys,
+     beauty
+where boys.id = beauty.boyfriend_id;
+
+# 案例2：查询员工名和对应的部门名
+select e.last_name, d.department_name
+from employees e,
+     departments d
+where e.department_id = d.department_id;
+
+# 案例3：查询员工名、工种编号、工种名
+select e.last_name, e.job_id, j.job_title
+from employees e,
+     jobs j
+where e.job_id = j.job_id;
+
+# 案例4：查询有奖金的员工名、部门名【加筛选条件】
+select e.last_name, d.department_name
+from employees e,
+     departments d
+where e.department_id = d.department_id
+  and e.commission_pct is not null;
+
+# 案例5：查询城市中第二个字符为o的部门名和城市名【加筛选条件】
+select d.department_name, l.city
+from locations l,
+     departments d
+where d.location_id = l.location_id
+  and l.city like '_o%';
+
+# 案例6：查询每个城市的部门个数【加分组】
+select city, count(*)
+from locations l,
+     departments d
+where l.location_id = d.location_id
+group by l.city;
+
+# 案例7：查询有奖金的每个部门的部门名以及部门的领导编号,以及该部门的最低工资【加分组】
+select d.department_name, d.manager_id, min(e.salary)
+from employees e,
+     departments d
+where e.department_id = d.department_id
+  and e.commission_pct is not null
+group by d.department_name, d.manager_id;
+
+# 案例8：查询每个工种的工种名和员工的个数，并且按员工的个数降序【加排序】
+select j.job_title, count(*)
+from jobs j,
+     employees e
+where e.job_id = j.job_id
+group by j.job_title
+order by count(*) desc;
+
+# 案例9：查询员工名，部门名，所在城市【三表查询】
+select e.last_name, d.department_name, l.city
+from employees e,
+     departments d,
+     locations l
+where e.department_id = d.department_id
+  and d.location_id = l.location_id;
+```
+
+#### 非等值连接
+
+先建立一张工资等级表
+
+```sql
+create table job_grades
+(
+    grade_level varchar(3),
+    lowest_sal  int,
+    highest_sal int
+);
+insert into job_grades
+values ('A', 1000, 2999),
+       ('B', 3000, 5999),
+       ('C', 6000, 9999),
+       ('D', 10000, 14999),
+       ('E', 15000, 24999),
+       ('F', 25000, 40000);
+```
+
+```sql
+# 2. 非等值连接
+# 案例1：查询员工的工资和工资级别
+select e.last_name, e.salary, j.grade_level
+from employees e,
+     job_grades j
+where e.salary between j.lowest_sal and j.highest_sal;
+```
+
+#### 自连接
+
+```sql
+# 3. 自连接
+# 案例：查询员工名以及其上级的名字
+select e.last_name, m.last_name
+from employees e,
+     employees m
+where e.manager_id = m.employee_id;
+```
+
+#### 综合测试
+
+```sql
+# 综合测试
+# 1. 显示员工表中的最大工资、工资平均值
+select max(salary), avg(salary)
+from employees;
+# 2. 查询员工表的employee_id，job_id，last_name，按department_id降序，salary升序
+select employee_id, job_id, last_name
+from employees
+order by department_id desc, salary asc;
+# 3. 查询员工表的job_id包含a和e的，并且a在e前面
+select job_id
+from employees
+where job_id like '%a%e%';
+/*
+  4. 已知表student，有id（学号），name，gradeId（年级编号）
+         表grade，有id（年级编号），name（年级名）
+         表result，有id，score，studentNo（学号）
+     要求查询姓名、年级名、成绩
+    select s.name,g.name,r.score
+    from student s,
+         grade g,
+         result r
+    where s.gradeId = g.id and s.id = r.studentNo;
+ */
+# 5. 显示当前日期，以及去前后空格，截取子字符串的函数
+select now(),trim('   123  '),substr('123456',3);
+```
+
+
+
+### sql99标准
 
 
 
