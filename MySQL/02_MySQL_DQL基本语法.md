@@ -626,21 +626,393 @@ select replace('周芷若-张无忌爱上了周芷若','周芷若','赵敏') as 
 
 ### 数学函数
 
+#### round
+
+```sql
+# 1. round 四舍五入
+select round(-1.65);
+select round(1.567,2);
+```
+
+
+
+#### ceil
+
+```sql
+# 2. ceil 向上取整，返回>=该参数的最小整数
+select ceil(1.002); # 2
+select ceil(-1.002);# -1
+```
+
+
+
+#### floor
+
+```sql
+# 3. floor 向下取整，返回<=该参数的最大整数
+select floor(9.99); #9
+select floor(-9.99);# 10
+```
+
+
+
+#### truncate
+
+```sql
+# 4. truncate 截断    保留几位小数，直接截断
+select truncate(1.65,1);
+```
+
+
+
+#### mod
+
+```sql
+# 5. mod取余  a%b a-a/b*b
+select MOD(10,3);# 1
+select mod (-10,3);# -1
+```
+
 
 
 ### 日期函数
+
+| 序号 | 格式符 | 功能                        |
+| ---- | ------ | --------------------------- |
+| 1    | %Y     | 四位的年份                  |
+| 2    | %y     | 两位的年份                  |
+| 3    | %m     | 月份（01,02,03......11,12） |
+| 4    | %c     | 月份（1,2,3......11,12）    |
+| 5    | %d     | 日（01,02,03......）        |
+| 6    | %H     | 小时（24小时制）            |
+| 7    | %h     | 小时（12小时制）            |
+| 8    | %i     | 分钟（00,01......59）       |
+| 9    | %s     | 秒（00,01......59）         |
+
+#### now
+
+```sql
+# 1. now 返回当前系统日期+时间
+select now();
+```
+
+
+
+#### curdate/current_date
+
+```sql
+# 2. curdate/current_date 返回当前系统日期，不包含时间
+select curdate();
+select current_date();
+```
+
+
+
+#### curtime/current_time
+
+```sql
+# 3. curtime/current_time 返回当前系统时间，不包含日期
+select curtime();
+select current_time();
+```
+
+
+
+#### year/month/day/hour/minute/second
+
+```sql
+# 4. year/month/day/hour/minute/second获取指定部分——年月日、时分秒
+select year(now()) 年;
+select month('1998-1-1') 年;
+select year(hiredate) from employees;
+select month(hiredate) from employees;
+select MONTHNAME(hiredate) from employees;
+```
+
+
+
+#### str_to_date
+
+```sql
+# 5. str_to_date：将日期格式的字符转换成指定格式的日期
+select str_to_date('1998-3-2 1','%Y-%c-%d %h');
+# 案例：查询入职日期为1992-4-3的员工信息
+select * from employees where hiredate='1992-4-3';
+select * from employees where hiredate=str_to_date('4-3 1992','%c-%d %Y');
+```
+
+
+
+#### date_format
+
+```sql
+# 6. date_format：将日期转换成字符
+select date_format(now(),'%Y年%m月%d日');
+# 案例：查询有奖金的员工名和入职日期（xx月/xx日 xx年）
+select last_name,DATE_FORMAT(hiredate,'%m月/%d日 %y年')
+from employees where commission_pct is not null;
+```
 
 
 
 ### 其他函数【补充】
 
+#### version
+
+```sql
+# 1. 查看当前数据库版本
+select version();
+```
+
+
+
+#### database
+
+```sql
+# 2. 查看当前所在数据库
+select database();
+```
+
+
+
+#### user
+
+```sql
+# 3. 当面用户
+select user();
+```
+
 
 
 ### 流程控制函数【补充】
 
+#### if
+
+```sql
+# 1. if函数：类似三目运算符   表达式1结果为true则返回表达式2的值，false则返回表达式3的值
+select if(10<5,'真','假');
+# 案例：有奖金则返回有，否则返回无
+select last_name,commission_pct,if(commission_pct is null,'无奖金','有奖金')
+from employees;
+```
+
+
+
+#### case
+
+**语法一：**
+
+case 要判断的字段或表达式
+
+when 常量1 then 要显示的值1或语句1;
+
+when 常量2 then 要显示的值2或语句2;
+
+...
+
+else 要显示的值n或语句n;
+
+end
+
+```sql
+# 2. case函数的使用一：switch case的效果
+/*
+    案例：查询员工的工资，要求
+    部门号=30，显示的工资为1.1倍
+    部门号=40，显示的工资为1.2倍
+    部门号=50，显示的工资为1.3倍
+    其他部门，显示的工资为原工资
+ */
+select salary,
+       department_id,
+       case department_id when 30 then salary * 1.1 when 40 then salary * 1.2 when 50 then salary * 1.3 else salary end
+from employees;
+```
+
+
+
+**语法二：**
+
+case
+
+when 条件1 then 要显示的值1或语句1;
+
+when 条件2 then 要显示的值2或语句2;
+
+...
+
+else 要显示的值n或语句n;
+
+end
+
+```sql
+# 3. case函数的使用二：类似于 if-else if-else
+/*
+    案例：查询员工的工资情况
+    如果工资>20000，显示A级别
+    如果工资>15000，显示B级别
+    如果工资>10000，显示C级别
+    否则，显示D级别
+ */
+select salary,
+       case when salary > 20000 then 'A' when salary > 15000 then 'B' when salary > 10000 then 'C' else 'D' end
+from employees;
+```
+
+
+
+### 综合测试
+
+```sql
+# 综合测试
+# 1. 显示系统时间（注：日期+时间）
+select now();
+# 2. 查询员工号、姓名、工资、工资提高百分之20%之后的结果
+select employee_id, last_name, salary, salary * 1.2
+from employees;
+# 3. 将员工的姓名按首字母排序，并写出姓名的长度
+select substr(last_name, 1, 1) 首字符, last_name, length(last_name)
+from employees
+order by 首字符;
+/*
+  4. 做一个查询，产生下面的结果：
+  <last_name>earns<salary>monthly but wants<salary*3>
+ */
+select CONCAT(last_name, ' earns ', salary, ' monthly but wants ', salary * 3)
+from employees;
+/*
+  5. 使用case-when，按照下面条件
+    job_id      grade
+    AD_PRES     A
+    ST_MAN      B
+    IT_PROG     C
+    SA_REP      D
+    ST_CLERK    E
+ */
+select last_name,
+       job_id,
+       case
+           when job_id = 'AD_PRES' then 'A'
+           when job_id = 'ST_MAN' then 'B'
+           when job_id = 'IT_PROG' then 'C'
+           when job_id = 'SA_REP' then 'D'
+           when job_id = 'ST_CLERK' then 'E'
+           end AS grade
+from employees;
+```
+
 
 
 ## 分组函数
+
+**功能：**用于统计使用，又称为聚合函数、统计函数、组函数
+
+**分类：**
+
+- sum：求和
+- avg：平均值
+- max：最大值
+- min：最小值
+- count：计算个数
+
+**特点：**
+
+1. **sum、avg**一般用于处理**数值型**
+2. **max、min、count**可以处理**任何类型**
+3. 以上函数都会**自动忽略null值**
+4. 可以和distinct搭配使用
+5. count函数单独介绍
+   - count(字段)：可以统计单个字段行数（非null才会统计）
+   - count(*)：统计行数，只要有一行的一个字段不为空就会被统计，所以就是所有记录数
+   - count(1)：相当于临时加上一列，所有的值都为1，也用于统计行数；
+   - 效率：
+     - MYISAM存储引擎下：count(*)效率最高
+     - INNODB存储引擎下：count(*)和count(1)效率差不多，但是比count(字段)高一些；
+6. 和分组函数一同查询的字段有限制，一般要求是group by之后的字段
+
+### sum/avg/max/min/count使用
+
+```sql
+# 分组函数
+use myemployees;
+
+# 1. 简单使用
+select sum(salary)
+from employees;
+
+select avg(salary)
+from employees;
+
+select min(salary)
+from employees;
+
+select max(salary)
+from employees;
+
+select count(*)
+from employees e;
+
+select sum(salary), avg(salary), max(salary), min(salary), count(salary)
+from employees;
+
+select sum(salary), round(avg(salary), 2), max(salary), min(salary), count(salary)
+from employees;
+
+# 2. 参数支持哪些类型
+select sum(last_name), avg(last_name)
+from employees;
+select sum(hiredate), avg(hiredate)
+from employees;
+select max(last_name), min(last_name)
+from employees;
+select max(hiredate), min(hiredate)
+from employees;
+select count(commission_pct)
+from employees;
+select count(last_name)
+from employees;
+
+# 3. 是否忽略null值
+select sum(commission_pct), avg(commission_pct), sum(commission_pct) / 35, sum(commission_pct) / 107
+from employees;
+
+select max(commission_pct), min(commission_pct)
+from employees;
+
+select count(commission_pct)
+from employees;
+
+# 4. 和distinct搭配使用
+select sum(distinct salary), sum(salary)
+from employees;
+
+select count(distinct salary), count(salary)
+from employees;
+```
+
+
+
+### 综合测试
+
+```sql
+# 综合测试
+# 1. 查询公司员工工资的最大值、最小值、平均值、总和
+select max(salary), min(salary), avg(salary), sum(salary)
+from employees;
+# 2. 查询员工表中的最大入职时间和最小入职时间的相差天数（DATEDIFF）
+select max(hiredate),min(hiredate),DATEDIFF(max(hiredate),min(hiredate))
+from employees;
+# 3. 查询部门编号为90的员工个数
+select count(*)
+from employees
+where department_id=90;
+```
+
+
+
+## 分组查询
+
+比如查询每个部门的平均工资等操作，需要对部门进行分组；
 
 
 
