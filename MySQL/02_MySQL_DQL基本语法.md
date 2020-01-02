@@ -1385,7 +1385,7 @@ where e.manager_id = m.employee_id;
 #### 综合测试
 
 ```sql
-# 综合测试
+# 综合测试 1
 # 1. 显示员工表中的最大工资、工资平均值
 select max(salary), avg(salary)
 from employees;
@@ -1409,16 +1409,394 @@ where job_id like '%a%e%';
     where s.gradeId = g.id and s.id = r.studentNo;
  */
 # 5. 显示当前日期，以及去前后空格，截取子字符串的函数
-select now(),trim('   123  '),substr('123456',3);
+select now(), trim('   123  '), substr('123456', 3);
+
+# 综合测试 2
+# 1. 显示所有员工的姓名，部门号和部门名称
+select e.last_name, e.department_id, d.department_name
+from employees e,
+     departments d
+where e.department_id = d.department_id;
+# 2. 查询90号部门员工的job_id和90号部门location_id
+select e.job_id, d.location_id
+from employees e,
+     departments d
+where e.department_id = d.department_id
+  and e.department_id = 90;
+# 3. 选择所有有奖金的员工的 last_name,department_name,location_id,city
+select e.last_name, d.department_name, d.location_id, l.city
+from employees e,
+     departments d,
+     locations l
+where e.department_id = d.department_id
+  and d.location_id = l.location_id
+  and e.commission_pct is not null;
+# 4. 选择city在Toronto工作的员工的last_name,job_id,department_id,department_name
+select e.last_name, e.job_id, d.department_id, d.department_name
+from employees e,
+     departments d,
+     locations l
+where e.department_id = d.department_id
+  and d.location_id = l.location_id
+  and l.city = 'Toronto';
+# 5. 查询每个工种、每个部门的部门名、工种名和最低工资
+select d.department_name, j.job_title, min(e.salary)
+from employees e,
+     departments d,
+     jobs j
+where e.department_id = d.department_id
+  and e.job_id = j.job_id
+group by j.job_id, d.department_name;
+# 6. 查询每个国家下的部门个数大于2的国家编号
+select l.country_id, count(*)
+from locations l,
+     departments d
+where d.location_id = l.location_id
+group by l.country_id
+having count(*) > 2;
+# 7. 选择指定员工的姓名、员工号、管理者的姓名和员工号
+select e.last_name, e.employee_id, m.last_name, m.employee_id
+from employees e,
+     employees m
+where e.manager_id = m.employee_id;
 ```
 
 
 
 ### sql99标准
 
+**语法：**
+
+select 查询列表
+
+from 表1 别名
+
+【连接类型】join 表2
+
+on 连接条件
+
+【where 筛选条件】
+
+【group by 分组】
+
+【having 筛选条件】
+
+【order by 排序列表】
+
+**分类：**
+
+内连接：inner
+
+外连接：
+
+- 左外：left 【outer】
+- 右外：right 【outer】
+- 全外：MySQL不支持，Oracle支持，full【outer】
+
+交叉连接：cross
+
+
+
+#### 内连接
+
+**特点：**
+
+1. 添加排序、分组、筛选
+2. inner可以省略
+3. 筛选条件可以放在where后面，连接条件放在on后面，提高分离性，便于阅读
+4. inner join连接和sql92语法中的等值连接效果是一样的，都是查询**交集**；
+
+##### 等值连接
+
+```sql
+# 二、sql99标准
+# 1. 内连接
+# 【内连接】 等值连接
+# 案例1：查询员工名、部门名
+select *
+from employees e
+         inner join departments d on e.department_id = d.department_id;
+# 案例2：查询名字中包含e的员工名和工种名（筛选）
+select e.last_name, j.job_title
+from employees e
+         inner join jobs j on e.job_id = j.job_id
+where e.last_name like '%e%';
+# 案例3：查询部门个数>3的城市名和部门个数（分组+筛选）
+select l.city, count(*)
+from departments d
+         inner join locations l on d.location_id = l.location_id
+group by l.city
+having count(*) > 3;
+# 案例4：查询哪个部门的部门员工个数>3的部门名和员工个数，并按个数降序（排序）
+select d.department_name, count(*)
+from employees e
+         inner join departments d on e.department_id = d.department_id
+group by e.department_id
+having count(*) > 3
+order by count(*) desc;
+# 案例5：查询员工名、部门名、工种名，并按部门名降序
+select e.last_name, d.department_name, j.job_title
+from employees e
+         inner join departments d on e.department_id = d.department_id
+         inner join jobs j on e.job_id = j.job_id
+order by d.department_name desc;
+```
+
+##### 非等值连接
+
+```sql
+# 【内连接】非等值连接
+# 案例1：查询员工的工资级别
+select e.last_name, e.salary, jg.grade_level
+from employees e
+         inner join job_grades jg
+                    on e.salary between jg.lowest_sal and jg.highest_sal;
+# 案例2：查询每个工资级别的个数>20，并且按工资级别的降序
+select count(*), jg.grade_level
+from employees e
+         inner join job_grades jg
+                    on e.salary between jg.lowest_sal and jg.highest_sal
+group by jg.grade_level
+having count(*) > 20
+order by jg.grade_level desc;
+```
+
+##### 自连接
+
+```sql
+# 【内连接】自连接
+# 案例1：查询员工的姓名、上级的名字
+select e.last_name, m.last_name
+from employees e
+         inner join employees m on e.manager_id = m.employee_id;
+# 案例2：查询姓名包含k的员工、上级的名字
+select e.last_name, m.last_name
+from employees e
+         inner join employees m on e.manager_id = m.employee_id
+where e.last_name like '%k%';
+```
+
+
+
+#### 外连接
+
+**应用场景：**用于查询一个表中有，另一个表中没有的记录
+
+**特点：**
+
+1. 外连接的查询结果为主表中的所有记录，
+
+   如果从表中有和它匹配的，则显示匹配的值；
+
+   如果从表中没有匹配的，则显示null；
+
+   外连接查询结果 = 内连接结果 + 主表中有而从表中没有的记录
+
+2. 左外连接：left join，左边的是主表
+
+3. 右外连接：right join，右边的是主表
+
+4. 左外和右外交换两个表的顺序，可以实现同样的效果
+
+```sql
+# 2. 外连接
+# 引入：查询男朋友不在男神表的女神名
+use girls;
+#           左外连接实现
+select g.name
+from beauty g
+         left outer join boys b on g.boyfriend_id = b.id
+where b.id is null;
+#           右外连接实现
+select g.name
+from boys b
+         right outer join beauty g on b.id = g.boyfriend_id
+where b.id is null;
+
+use myemployees;
+# 案例1：查询哪个部门没有员工
+select d.department_name, e.employee_id
+from departments d
+         left outer join employees e on d.department_id = e.department_id
+where e.employee_id is null;
+```
+
+
+
+#### 全外连接
+
+内连接的结果+表1中有但表2中没有的+表2中有但表1中没有的
+
+
+
+#### 交叉连接
+
+笛卡尔乘积
+
+
+
+### 92语法与99语法的总结
+
+**功能：**sql99支持的多
+
+**可读性：**sql99实现连接条件和筛选条件的分离，可读性较高
+
+
+
+### Join连接总结
+
+1. 内连接【inner join】
+
+   ![image-20200102215119224](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215119224.png)
+
+2. 左外连接【left outer join】
+
+   ![image-20200102215138002](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215138002.png)
+
+3. 右外连接【right outer join】
+
+   ![image-20200102215238785](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215238785.png)
+
+4. 全外连接【full outer join】（MySQL不支持，Oracle支持）
+
+   ![image-20200102215545880](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215545880.png)
+
+5. 左外连接去除交集部分【left outer join+B.key为null】
+
+   ![image-20200102215438425](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215438425.png)
+
+6. 右外连接去除交集部分【right outer join+A.key为null】
+
+   ![image-20200102215506225](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215506225.png)
+
+7. 去除关联表交集部分
+
+   ![image-20200102215710336](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215710336.png)
+
+
+
+### 多表连接综合案例
+
+```sql
+# 综合案例
+# 1. 查询编号>3的女神的男朋友信息，如果有则列出详细，如果没有则null填充
+select g.*, b.*
+from beauty g
+         left outer join boys b
+                         on g.boyfriend_id = b.id
+where g.id > 3;
+
+# 2. 查询哪个城市没有部门
+use myemployees;
+select l.city
+from departments d
+         left outer join locations l on l.location_id = d.location_id
+where d.department_id is null;
+
+# 3. 查询部门名为SAL或IT的员工信息
+select e.last_name, d.department_id, d.department_name
+from departments d
+         left join employees e on e.department_id = d.department_id
+where d.department_name = 'SAL'
+   OR d.department_name = 'IT';
+```
+
 
 
 ## 子查询
+
+**含义：**
+
+- 出现在其他语句中的select语句，称之为子查询或内查询；
+- 外部的查询语句，称之为主查询或外查询
+
+
+
+**分类：**
+
+按子查询出现的位置
+
+- select后面
+  - 仅仅标量子查询
+- from后面
+  - 表子查询
+- where或having后面
+  - 标量子查询（单行）
+  - 列子查询（多行）
+  - 行子查询（多列多行）
+- exist后面（相关子查询）
+  - 表子查询
+
+按结果集的行列数不同：
+
+- 标量子查询（结果集只有一行一列）
+- 列子查询（结果集只有一列多行）
+- 行子查询（结果集只有一行多列）
+- 表子查询（结果集一般为多行多列）
+
+
+
+### where或having后面
+
+**特点：**
+
+1. 子查询放在小括号内
+2. 子查询一般放在条件的右侧
+3. 标量子查询，一般搭配着单行操作符使用（> < >= <= = <>）
+4. 列子查询，一般搭配多行操作符使用（in any some all）
+5. 子查询的执行优先于主查询查询，主查询的条件用到了子查询的结果
+
+
+
+#### 标量子查询(单行单列)
+
+```sql
+# 1. 标量子查询（单行子查询）
+# 案例1：谁的工资比Abel高？
+select e.last_name, e.salary
+from employees e
+where salary > (select e.salary
+                from employees e
+                where e.last_name = 'Abel');
+# 案例2：返回job_id与141号员工相同，salary比143号员工多的员工姓名，job_id和工资
+select e.last_name, e.job_id, e.salary
+from employees e
+where e.job_id = (select e.job_id from employees e where e.employee_id = 141)
+  and e.salary > (select e.salary from employees e where e.employee_id = 143);
+# 案例3：返回公司工资最少的员工的last_name,job_id和salary
+select e.last_name, e.job_id, e.salary
+from employees e
+where e.salary = (select min(e.salary)
+                  from employees e);
+# 案例4：查询最低工资>50号部门最低工资的部门id和其最低工资
+select e.department_id, min(salary)
+from employees e
+group by e.department_id
+having min(e.salary) > (select min(salary)
+                        from employees
+                        where department_id = 50);
+```
+
+
+
+#### 列子查询（多行单列）
+
+- 返回多行
+- 使用多行比较操作符
+
+| 操作符      | 含义                                                 |
+| ----------- | ---------------------------------------------------- |
+| IN / NOT IN | 等于列表中的**任意一个**，若不在列表中的**任意一个** |
+| ANY / SOME  | 和子查询返回的**某一个**值比较                       |
+| ALL         | 和子查询返回的**所有**值比较                         |
+
+
+
+```sql
+
+```
+
+
 
 
 
