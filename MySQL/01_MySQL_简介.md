@@ -9,6 +9,12 @@ categories:
 
 # 01_MySQL_简介
 
+> [相关代码GitHub仓库](https://github.com/tomxwd/MySQL-Basic)
+>
+> git@github.com:tomxwd/MySQL-Basic.git
+>
+> https://github.com/tomxwd/MySQL-Basic.git
+
 ## 简介
 
 DB：数据库（Database），存储数据的仓库，保存一系列有组织的数据；

@@ -9,6 +9,12 @@ categories:
 
 # 03_MySQL_DML基本语法
 
+>[相关代码GitHub仓库](https://github.com/tomxwd/MySQL-Basic)
+>
+>git@github.com:tomxwd/MySQL-Basic.git
+>
+>https://github.com/tomxwd/MySQL-Basic.git
+
 DML语言：数据操作语言
 
 - 插入：insert

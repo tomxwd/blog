@@ -9,6 +9,12 @@ categories:
 
 # 02_MySQL_DQL基本语法
 
+>[相关代码GitHub仓库](https://github.com/tomxwd/MySQL-Basic)
+>
+>git@github.com:tomxwd/MySQL-Basic.git
+>
+>https://github.com/tomxwd/MySQL-Basic.git
+
 这里是DQL（Data Query Language）
 
 ## 准备工作
