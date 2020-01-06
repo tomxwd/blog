@@ -57,7 +57,7 @@ categories:
 
 6. 设置开放的端口号
 
-   - firewall-cmd --add-service=http --permanent
+   - firewall-cmd --add-service=http --permanent【开启http服务】
    - sudo firewall-cmd --add-port=80/tcp --permanent
 
 7. 重启防火墙
