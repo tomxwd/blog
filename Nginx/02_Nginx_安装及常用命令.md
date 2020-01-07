@@ -59,6 +59,7 @@ categories:
 
    - firewall-cmd --add-service=http --permanent【开启http服务】
    - sudo firewall-cmd --add-port=80/tcp --permanent
+   - 【关闭端口】（`firewall-cmd --remove-port=8080/tcp --permanent`）
 
 7. 重启防火墙
 
