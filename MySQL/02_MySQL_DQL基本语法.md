@@ -1,5 +1,5 @@
 ---
-title: 02_MySQL_DQL基本语法
+![](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/MySQL/02%E5%8E%BB%E9%99%A4%E5%85%B3%E8%81%94%E8%A1%A8%E4%BA%A4%E9%9B%86%E9%83%A8%E5%88%86.png)title: 02_MySQL_DQL基本语法
 date: 2019-12-30 20:55:03
 tags: 
  - MySQL
@@ -1653,31 +1653,31 @@ where e.employee_id is null;
 
 1. 内连接【inner join】
 
-   ![image-20200102215119224](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215119224.png)
+   ![innerJoin](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/MySQL/02innerJoin.png)
 
 2. 左外连接【left outer join】
 
-   ![image-20200102215138002](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215138002.png)
+   ![leftOuterJoin](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/MySQL/02leftOuterJoin.png)
 
 3. 右外连接【right outer join】
 
-   ![image-20200102215238785](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215238785.png)
+   ![rightOuterJoin](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/MySQL/02rightOuterJoin.png)
 
 4. 全外连接【full outer join】（MySQL不支持，Oracle支持）
 
-   ![image-20200102215545880](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215545880.png)
+   ![fullOuterJoin](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/MySQL/02fullOuterJoin.png)
 
 5. 左外连接去除交集部分【left outer join+B.key为null】
 
-   ![image-20200102215438425](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215438425.png)
+   ![左外连接去除交集部分](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/MySQL/02%E5%B7%A6%E5%A4%96%E8%BF%9E%E6%8E%A5%E5%8E%BB%E9%99%A4%E4%BA%A4%E9%9B%86%E9%83%A8%E5%88%86.png)
 
 6. 右外连接去除交集部分【right outer join+A.key为null】
 
-   ![image-20200102215506225](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215506225.png)
+   ![右外连接去除交集部分](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/MySQL/02%E5%8F%B3%E5%A4%96%E8%BF%9E%E6%8E%A5%E5%8E%BB%E9%99%A4%E4%BA%A4%E9%9B%86%E9%83%A8%E5%88%86.png)
 
 7. 去除关联表交集部分
 
-   ![image-20200102215710336](02_MySQL_DQL%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/image-20200102215710336.png)
+   ![去除关联表交集部分](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/MySQL/02%E5%8E%BB%E9%99%A4%E5%85%B3%E8%81%94%E8%A1%A8%E4%BA%A4%E9%9B%86%E9%83%A8%E5%88%86.png)
 
 
 
