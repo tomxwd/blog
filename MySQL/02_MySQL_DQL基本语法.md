@@ -1,5 +1,5 @@
 ---
-![](https://raw.githubusercontent.com/tomxwd/ImageHosting/master/blog/MySQL/02%E5%8E%BB%E9%99%A4%E5%85%B3%E8%81%94%E8%A1%A8%E4%BA%A4%E9%9B%86%E9%83%A8%E5%88%86.png)title: 02_MySQL_DQL基本语法
+title: 02_MySQL_DQL基本语法
 date: 2019-12-30 20:55:03
 tags: 
  - MySQL

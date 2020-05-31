@@ -204,3 +204,31 @@ alter table students.stuinfo drop foreign key fk_stuinfo_major;
 | **列级约束** | 列的后面     | 语法都支持，但外键无效     | 不可以             |
 | **表级约束** | 所有列的下面 | 默认和非空不支持，其他支持 | 可以（主键无效果） |
 
+
+
+## 标识列（自增长列）
+
+**含义：**
+
+可以不用手动的插入值，系统提供默认的序列值；
+
+**使用方式：**
+
+1. 创建表的时候设置标识列，字段加 AUTO_INCREMENT即可；
+2. 修改表的时候设置标识列；
+3. 修改表的时候删除标识列；
+
+**其他：**
+
+可以用`show variables like '%auto_increment%'`来看有关自增长的设置，一个是步长（auto_increment_increment），一个是起始值【偏移量】（auto_increment_offset）；
+
+可以用set auto_increment_increment=3来改变步长为3；
+
+**特点：**
+
+1. 标识列必须需要一个Key，主键或者UNIQUE等；
+2. 一个表中只能有一个标识列；
+3. 标识列的类型需要是数值型（int，float，double等）；
+4. 标识列可以通过`set auto_increment_increment=3`来改变步长，也可以通过第一次插入指定值来改变起始值；
+5. 
+
